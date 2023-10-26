@@ -1,7 +1,9 @@
-# Build your own Programmatic Incremental Build System
+# [Build your own Programmatic Incremental Build System](https://gohla.github.io/pibs/)
 
-A programming tutorial on building your own programmatic incremental build system in Rust, aiming to teach the concepts of programmatic incremental build systems.
-Live hosted version at: <https://gohla.github.io/pibs/>
+A programming tutorial where you build your own Programmatic Incremental Build System in Rust, aiming to teach concepts of Programmatic Incremental Build Systems through implementation and experimentation.
+The live hosted version of this tutorial is available at: <https://gohla.github.io/pibs/>
+
+The rest of this readme is about (locally) building the tutorial.
 
 ## Requirements
 
