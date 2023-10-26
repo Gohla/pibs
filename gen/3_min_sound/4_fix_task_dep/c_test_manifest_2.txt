@@ -1,0 +1,12 @@
+
+→ ToUpper(ToLower(ReadFile("/tmp/.tmpyxRmdT/in.txt", Modified)))
+ ▶ ToUpper(ToLower(ReadFile("/tmp/.tmpyxRmdT/in.txt", Modified)))
+  → ToLower(ReadFile("/tmp/.tmpyxRmdT/in.txt", Modified))
+   ? ReadFile("/tmp/.tmpyxRmdT/in.txt", Modified)
+    → ReadFile("/tmp/.tmpyxRmdT/in.txt", Modified)
+     ✓ /tmp/.tmpyxRmdT/in.txt
+    ← Ok(String("Hello, World!"))
+   ✓ ReadFile("/tmp/.tmpyxRmdT/in.txt", Modified)
+  ← Ok(String("hello, world!"))
+ ◀ Ok(String("HELLO, WORLD!"))
+← Ok(String("HELLO, WORLD!"))
