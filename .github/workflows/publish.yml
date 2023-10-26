@@ -4,8 +4,10 @@ on:
     branches:
       - main
 jobs:
-  publish-tutorial:
+  publish:
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
     steps:
