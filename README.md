@@ -3,6 +3,9 @@
 A programming tutorial where you build your own Programmatic Incremental Build System in Rust, aiming to teach concepts of Programmatic Incremental Build Systems through implementation and experimentation.
 The live hosted version of this tutorial is available at: <https://gohla.github.io/pibs/>
 
+In the programming tutorial, you build a subset of the [PIE build system](https://github.com/Gohla/pie).
+If you are interested in using the full build system, see <https://github.com/Gohla/pie>
+
 The rest of this readme is about (locally) building the tutorial.
 
 ## Requirements
