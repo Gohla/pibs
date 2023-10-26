@@ -1,8 +1,8 @@
-name: Publish tutorial
+name: Publish
 on:
   push:
     branches:
-      - master
+      - main
 jobs:
   publish-tutorial:
     runs-on: ubuntu-22.04
@@ -17,19 +17,19 @@ jobs:
         uses: ATiltedTree/setup-rust@v1
         with:
           rust-version: stable
-      # Caching for tutorial stepper application
-      - id: cache-stepper
-        name: Cache stepper
+      # Caching for Cargo
+      - id: cache-cargo
+        name: Cache Cargo
         uses: actions/cache@v3
         with:
-          path: tutorial/stepper/target
-          key: ${{ runner.os }}-stepper-${{ hashFiles('tutorial/stepper/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-stepper-
+          path: target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
       # Run stepper to verify that tutorial code works, and to generate diffs.
       - id: run-stepper
         name: Run stepper
         run: |
-          cd tutorial/stepper
+          cd stepper
           cargo run -- --debug
       - id: setup-mdbook
         name: Setup mdBook
@@ -64,26 +64,16 @@ jobs:
       - id: install-mdbook-preprocessors
         name: Install mdBook preprocessors
         run: cargo binstall --no-confirm --no-symlinks mdbook-admonish mdbook-external-links
-      # Caching for tutorial mdbook-diff2html application
-      - id: cache-mdbook-diff2html
-        name: Cache mdbook-diff2html
-        uses: actions/cache@v3
-        with:
-          path: tutorial/mdbook-diff2html/target
-          key: ${{ runner.os }}-mdbook-diff2html-${{ hashFiles('tutorial/mdbook-diff2html/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-mdbook-diff2html-
       - id: install-mdbook-diff2html-preprocessor
         name: Install mdbook-diff2html preprocessors
-        run: cargo install --path tutorial/mdbook-diff2html
+        run: cargo install --path mdbook-diff2html
       - id: build
-        name: Build tutorial mdBook
-        run: |
-          cd tutorial
-          mdbook build
-      - id: deploy
-        name: Deploy to GitHub pages
+        name: Build
+        run: mdbook build
+      - id: publish
+        name: Publish to GitHub pages
         uses: peaceiris/actions-gh-pages@v3
         if: ${{ github.ref == 'refs/heads/master' }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./tutorial/book
+          publish_dir: ./book

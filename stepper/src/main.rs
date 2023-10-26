@@ -107,7 +107,7 @@ fn main() {
         app::step_all(destination_root_directory, use_local_pie_graph, run_cargo, create_outputs);
       } else { // Temporary directory must be dropped to clean it up, so duplicate step_all call to make this easy.
         let temp_dir = tempfile::tempdir().expect("failed to create temporary directory");
-        app::step_all(temp_dir.path().join("tutorial"), use_local_pie_graph, run_cargo, create_outputs);
+        app::step_all(temp_dir.path().join("pibs"), use_local_pie_graph, run_cargo, create_outputs);
       }
     }
   }

@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use crate::modification::{add, create, create_diff, create_diff_builder, create_diff_from_destination_file, insert};
 use crate::output::{CargoOutput, DirectoryStructure, SourceArchive};
@@ -6,30 +6,31 @@ use crate::stepper::Stepper;
 
 pub fn step_all(
   destination_root_directory: impl AsRef<Path>,
-  use_local_pie_graph: bool,
+  _use_local_pie_graph: bool,
   run_cargo: bool,
   create_outputs: bool,
 ) {
   let destination_root_directory = destination_root_directory.as_ref();
   let mut stepper = Stepper::new(
-    "../src/",
+    "src",
     destination_root_directory,
     destination_root_directory.join("pie").join("src"),
-    "../src/gen/",
+    "src/gen/",
     run_cargo,
     ["build"],
     create_outputs,
   );
 
-  let pie_graph_path = PathBuf::from("../../graph");
-  // Use dunce to not make an absolute path prefixed with "\\?\" (UNC path) on Windows, as Cargo does not support these.
-  let pie_graph_path = dunce::canonicalize(pie_graph_path)
-    .expect("failed to get absolute path to pie_graph");
-  let pie_graph_dependency = if use_local_pie_graph {
-    format!("pie_graph = {{ path = '{}' }}", pie_graph_path.display())
-  } else {
-    r#"pie_graph = "0.0.1""#.to_string()
-  };
+  // let pie_graph_path = PathBuf::from("../../graph");
+  // // Use dunce to not make an absolute path prefixed with "\\?\" (UNC path) on Windows, as Cargo does not support these.
+  // let pie_graph_path = dunce::canonicalize(pie_graph_path)
+  //   .expect("failed to get absolute path to pie_graph");
+  // let pie_graph_dependency = if use_local_pie_graph {
+  //   format!("pie_graph = {{ path = '{}' }}", pie_graph_path.display())
+  // } else {
+  //   r#"pie_graph = "0.0.1""#.to_string()
+  // };
+  let pie_graph_dependency = r#"pie_graph = "0.0.1""#.to_string();
   stepper.add_substitution("%%%PIE_GRAPH_DEPENDENCY%%%", pie_graph_dependency);
 
   stepper.with_path("0_intro", |stepper| {

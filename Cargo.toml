@@ -2,15 +2,11 @@ cargo-features = ["named-profiles", "profile-overrides"]
 
 [workspace]
 members = [
-  "pie",
-  "graph",
-  "dev_shared",
-  "dev_shared_external",
+  "stepper",
+  "mdbook-diff2html",
 ]
 default-members = [
-  "pie",
-  "graph",
-  "dev_shared",
-  "dev_shared_external",
+  "stepper",
+  "mdbook-diff2html",
 ]
 resolver = "2"
