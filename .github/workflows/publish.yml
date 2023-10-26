@@ -28,9 +28,7 @@ jobs:
       # Run stepper to verify that tutorial code works, and to generate diffs.
       - id: run-stepper
         name: Run stepper
-        run: |
-          cd stepper
-          cargo run -- --debug
+        run: cargo run --bin stepper -- --debug
       - id: setup-mdbook
         name: Setup mdBook
         uses: peaceiris/actions-mdbook@v1
