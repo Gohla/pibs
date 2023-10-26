@@ -1,52 +1,52 @@
    Compiling pie v0.1.0 (/pie)
-    Finished dev [unoptimized + debuginfo] target(s) in 0.68s
+    Finished dev [unoptimized + debuginfo] target(s) in 0.75s
      Running `/pie/target/debug/examples/incremental`
 A) New task: expect `read_task` to execute
-→ ReadStringFromFile("/tmp/.tmptYgmW4/input.txt", Modified)
- ▶ ReadStringFromFile("/tmp/.tmptYgmW4/input.txt", Modified)
-  - /tmp/.tmptYgmW4/input.txt
+→ ReadStringFromFile("/tmp/.tmp3eUi5v/input.txt", Modified)
+ ▶ ReadStringFromFile("/tmp/.tmp3eUi5v/input.txt", Modified)
+  - /tmp/.tmp3eUi5v/input.txt
  ◀ Ok("Hi")
 ← Ok("Hi")
 🏁
 
 B) Reuse: expect no execution
-→ ReadStringFromFile("/tmp/.tmptYgmW4/input.txt", Modified)
- ✓ /tmp/.tmptYgmW4/input.txt
+→ ReadStringFromFile("/tmp/.tmp3eUi5v/input.txt", Modified)
+ ✓ /tmp/.tmp3eUi5v/input.txt
 ← Ok("Hi")
 🏁
 
 C) Inconsistent file dependency: expect `read_task` to execute
-→ ReadStringFromFile("/tmp/.tmptYgmW4/input.txt", Modified)
- ✗ /tmp/.tmptYgmW4/input.txt (old: Modified(Some(SystemTime { tv_sec: 1698320266, tv_nsec: 251113162 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1698320266, tv_nsec: 255113364 })))
- ▶ ReadStringFromFile("/tmp/.tmptYgmW4/input.txt", Modified)
-  - /tmp/.tmptYgmW4/input.txt
+→ ReadStringFromFile("/tmp/.tmp3eUi5v/input.txt", Modified)
+ ✗ /tmp/.tmp3eUi5v/input.txt (old: Modified(Some(SystemTime { tv_sec: 1698320858, tv_nsec: 543777964 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1698320858, tv_nsec: 547778201 })))
+ ▶ ReadStringFromFile("/tmp/.tmp3eUi5v/input.txt", Modified)
+  - /tmp/.tmp3eUi5v/input.txt
  ◀ Ok("Hello")
 ← Ok("Hello")
 🏁
 
 D) Different tasks: expect `read_task_b_modified` and `read_task_b_exists` to execute
-→ ReadStringFromFile("/tmp/.tmptYgmW4/input_b.txt", Modified)
- ▶ ReadStringFromFile("/tmp/.tmptYgmW4/input_b.txt", Modified)
-  - /tmp/.tmptYgmW4/input_b.txt
+→ ReadStringFromFile("/tmp/.tmp3eUi5v/input_b.txt", Modified)
+ ▶ ReadStringFromFile("/tmp/.tmp3eUi5v/input_b.txt", Modified)
+  - /tmp/.tmp3eUi5v/input_b.txt
  ◀ Ok("Test")
 ← Ok("Test")
 🏁
-→ ReadStringFromFile("/tmp/.tmptYgmW4/input_b.txt", Exists)
- ▶ ReadStringFromFile("/tmp/.tmptYgmW4/input_b.txt", Exists)
-  - /tmp/.tmptYgmW4/input_b.txt
+→ ReadStringFromFile("/tmp/.tmp3eUi5v/input_b.txt", Exists)
+ ▶ ReadStringFromFile("/tmp/.tmp3eUi5v/input_b.txt", Exists)
+  - /tmp/.tmp3eUi5v/input_b.txt
  ◀ Ok("Test")
 ← Ok("Test")
 🏁
 
 E) Different stampers: expect only `read_task_b_modified` to execute
-→ ReadStringFromFile("/tmp/.tmptYgmW4/input_b.txt", Modified)
- ✗ /tmp/.tmptYgmW4/input_b.txt (old: Modified(Some(SystemTime { tv_sec: 1698320266, tv_nsec: 255113364 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1698320266, tv_nsec: 259113565 })))
- ▶ ReadStringFromFile("/tmp/.tmptYgmW4/input_b.txt", Modified)
-  - /tmp/.tmptYgmW4/input_b.txt
+→ ReadStringFromFile("/tmp/.tmp3eUi5v/input_b.txt", Modified)
+ ✗ /tmp/.tmp3eUi5v/input_b.txt (old: Modified(Some(SystemTime { tv_sec: 1698320858, tv_nsec: 547778201 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1698320858, tv_nsec: 551778438 })))
+ ▶ ReadStringFromFile("/tmp/.tmp3eUi5v/input_b.txt", Modified)
+  - /tmp/.tmp3eUi5v/input_b.txt
  ◀ Ok("Test Test")
 ← Ok("Test Test")
 🏁
-→ ReadStringFromFile("/tmp/.tmptYgmW4/input_b.txt", Exists)
- ✓ /tmp/.tmptYgmW4/input_b.txt
+→ ReadStringFromFile("/tmp/.tmp3eUi5v/input_b.txt", Exists)
+ ✓ /tmp/.tmp3eUi5v/input_b.txt
 ← Ok("Test")
 🏁

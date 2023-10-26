@@ -1,6 +1,6 @@
 
-→ ToLower(ReadFile("/tmp/.tmpIKTgzg/in.txt", Modified))
- ? ReadFile("/tmp/.tmpIKTgzg/in.txt", Modified)
-  ✓ /tmp/.tmpIKTgzg/in.txt
- ✓ ReadFile("/tmp/.tmpIKTgzg/in.txt", Modified)
+→ ToLower(ReadFile("/tmp/.tmpg46Iko/in.txt", Modified))
+ ? ReadFile("/tmp/.tmpg46Iko/in.txt", Modified)
+  ✓ /tmp/.tmpg46Iko/in.txt
+ ✓ ReadFile("/tmp/.tmpg46Iko/in.txt", Modified)
 ← Ok(String("hello world!"))
