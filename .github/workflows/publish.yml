@@ -57,8 +57,8 @@ jobs:
             ~/.cargo/git/db/
             ~/.cargo/.crates.toml
             ~/.cargo/.crates2.json
-          key: ${{ runner.os }}-cargo-${{ hashFiles('.crates.toml.hash', '.crates2.json.hash') }}
-          restore-keys: ${{ runner.os }}-cargo-
+          key: ${{ runner.os }}-cargo-binaries-${{ hashFiles('.crates.toml.hash', '.crates2.json.hash') }}
+          restore-keys: ${{ runner.os }}-cargo-binaries-
       - id: install-mdbook-preprocessors
         name: Install mdBook preprocessors
         run: cargo binstall --no-confirm --no-symlinks mdbook-admonish mdbook-external-links
