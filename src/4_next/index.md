@@ -69,7 +69,7 @@ For additional related work discussion, check the related work sections of [chap
 ### Pluto
 
 PIE is based on [Pluto](https://www.pl.informatik.uni-mainz.de/files/2019/04/pluto-incremental-build.pdf), a programmatic incremental build system developed by Sebastian Erdweg et al.
-This is not a coincidence, as Sebastian Erdweg frequently contributed improvements to our software (Spoofax 2 uses Pluto), he was my PhD copromotor, and coauthored the "Scalable Incremental Building with Dynamic Task Dependencies" paper.
+This is not a coincidence, as Sebastian Erdweg was my PhD promotor, and coauthored the "Scalable Incremental Building with Dynamic Task Dependencies" paper.
 
 The [Pluto paper](https://www.pl.informatik.uni-mainz.de/files/2019/04/pluto-incremental-build.pdf) provides a more formal proof of incrementality and correctness for the top-down build algorithm, which provides confidence that this algorithm works correctly, but also explains the intricate details of the algorithm very well.
 Note that Pluto uses "builder" instead of "task".
@@ -84,8 +84,10 @@ Especially this central dependency graph management is useful for the bottom-up 
 
 ### Other programmatic incremental build systems
 
+[Build Systems à la Carte](https://www.microsoft.com/en-us/research/uploads/prod/2018/03/build-systems.pdf) shows a systematic and executable framework (in Haskell) for developing and comparing build systems. It compares the impact of design decisions such as what persistent build information to store, the scheduler to use, static/dynamic dependencies, whether it is minimal, supports early cutoff, and whether it supports distributed (cloud) builds. 
+Even though the Haskell code might be a bit confusing if you're not used to functional programming, it is a great paper that discusses many aspects of programmatic incremental build systems and how to implement them.
 
-[Build Systems à la Carte](https://www.microsoft.com/en-us/research/uploads/prod/2018/03/build-systems.pdf)
+
 
 shake
 - <https://shakebuild.com/>
@@ -95,5 +97,3 @@ shake
 Rattle
 - <https://github.com/ndmitchell/rattle>
 - [Build Scripts with Perfect Dependencies](https://ndmitchell.com/downloads/paper-build_scripts_with_perfect_dependencies-18_nov_2020.pdf)
-
-adapton
