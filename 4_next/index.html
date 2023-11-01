@@ -253,7 +253,7 @@ This subsection discusses them.
 For additional related work discussion, check the related work sections of <a href="https://gkonat.github.io/assets/dissertation/konat_dissertation.pdf" title="" target="_blank">chapter 7 (page 104) and chapter 8 (page 126)</a> of my dissertation. </p>
 <h3 id="pluto"><a class="header" href="#pluto">Pluto</a></h3>
 <p>PIE is based on <a href="https://www.pl.informatik.uni-mainz.de/files/2019/04/pluto-incremental-build.pdf" title="" target="_blank">Pluto</a>, a programmatic incremental build system developed by Sebastian Erdweg et al.
-This is not a coincidence, as Sebastian Erdweg frequently contributed improvements to our software (Spoofax 2 uses Pluto), he was my PhD copromotor, and coauthored the “Scalable Incremental Building with Dynamic Task Dependencies” paper.</p>
+This is not a coincidence, as Sebastian Erdweg was my PhD promotor, and coauthored the “Scalable Incremental Building with Dynamic Task Dependencies” paper.</p>
 <p>The <a href="https://www.pl.informatik.uni-mainz.de/files/2019/04/pluto-incremental-build.pdf" title="" target="_blank">Pluto paper</a> provides a more formal proof of incrementality and correctness for the top-down build algorithm, which provides confidence that this algorithm works correctly, but also explains the intricate details of the algorithm very well.
 Note that Pluto uses “builder” instead of “task”.
 In fact, a Pluto builder is more like an incremental function that <em>does not carry its input</em>, whereas a PIE task is more like an incremental closure that includes its input.</p>
@@ -264,7 +264,8 @@ The downside is that PIE requires a mapping from a <code>Task</code> (using its 
 The upside is that tasks don’t have to manage these build unit files, and the central <code>Store</code> can efficiently manage the entire dependency graph.
 Especially this central dependency graph management is useful for the bottom-up build algorithm, as we can use <a href="http://www.doc.ic.ac.uk/~phjk/Publications/DynamicTopoSortAlg-JEA-07.pdf" title="" target="_blank">dynamic topological sort algorithms for directed acyclic graphs</a>.</p>
 <h3 id="other-programmatic-incremental-build-systems"><a class="header" href="#other-programmatic-incremental-build-systems">Other programmatic incremental build systems</a></h3>
-<p><a href="https://www.microsoft.com/en-us/research/uploads/prod/2018/03/build-systems.pdf" title="" target="_blank">Build Systems à la Carte</a></p>
+<p><a href="https://www.microsoft.com/en-us/research/uploads/prod/2018/03/build-systems.pdf" title="" target="_blank">Build Systems à la Carte</a> shows a systematic and executable framework (in Haskell) for developing and comparing build systems. It compares the impact of design decisions such as what persistent build information to store, the scheduler to use, static/dynamic dependencies, whether it is minimal, supports early cutoff, and whether it supports distributed (cloud) builds. 
+Even though the Haskell code might be a bit confusing if you’re not used to functional programming, it is a great paper that discusses many aspects of programmatic incremental build systems and how to implement them.</p>
 <p>shake</p>
 <ul>
 <li><a href="https://shakebuild.com/" target="_blank">https://shakebuild.com/</a></li>
@@ -276,7 +277,6 @@ Especially this central dependency graph management is useful for the bottom-up 
 <li><a href="https://github.com/ndmitchell/rattle" target="_blank">https://github.com/ndmitchell/rattle</a></li>
 <li><a href="https://ndmitchell.com/downloads/paper-build_scripts_with_perfect_dependencies-18_nov_2020.pdf" title="" target="_blank">Build Scripts with Perfect Dependencies</a></li>
 </ul>
-<p>adapton</p>
 
                     </main>
 
