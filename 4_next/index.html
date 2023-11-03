@@ -205,15 +205,14 @@ There are currently two versions of PIE:</p>
 </li>
 </ul>
 <h2 id="publications-about-pie"><a class="header" href="#publications-about-pie">Publications about PIE</a></h2>
-<p>We wrote two papers about programmatic incremental build systems and PIE. These papers were published to conferences, but you can find the <a href="https://gkonat.github.io/assets/dissertation/konat_dissertation.pdf" title="" target="_blank">most updated versions of these papers in my dissertation</a>.
-The two papers are found in my dissertation at:</p>
+<p>We wrote two papers about programmatic incremental build systems and PIE, for which updated versions are in my dissertation:</p>
 <ul>
 <li>
-<p>Chapter 7, page 83: PIE: A Domain-Specific Language for Interactive Software Development Pipelines. </p>
+<p><a href="https://gkonat.github.io/assets/dissertation/konat_dissertation.pdf#page=105" title="" target="_blank">Chapter 7, page 83: PIE: A Domain-Specific Language for Interactive Software Development Pipelines</a>. </p>
 <p>This describes a domain-specific language (DSL) for programmatic incremental build systems, and introduces the PIE library in Kotlin. This implementation was later changed to a pure Java library to reduce the number of dependencies. </p>
 </li>
 <li>
-<p>Chapter 8, page 109: Scalable Incremental Building with Dynamic Task Dependencies.</p>
+<p><a href="https://gkonat.github.io/assets/dissertation/konat_dissertation.pdf#page=131" title="" target="_blank">Chapter 8, page 109: Scalable Incremental Building with Dynamic Task Dependencies</a>.</p>
 <p>This describes a hybrid incremental build algorithm that builds from the bottom-up, only switching to top-down building when necessary. Bottom-up builds are more efficient with changes that have a small effect (i.e., most changes), due to only <em>checking the part of the dependency graph affected by changes</em>. Therefore, this algorithm <em>scales down to small changes while scaling up to large dependency graphs</em>. </p>
 <p>Unfortunately, we did not implement (hybrid) bottom-up building in this tutorial due to a lack of time. However, the <a href="https://github.com/Gohla/pie" title="" target="_blank">PIE in Rust</a> library has a <a href="https://github.com/Gohla/pie/blob/master/pie/src/context/bottom_up.rs" title="" target="_blank">bottom-up context implementation</a> which you can check out. Due to similarities between the top-down and bottom-up context, some common functionality was <a href="https://github.com/Gohla/pie/blob/master/pie/src/context/mod.rs" title="" target="_blank">extracted into an extension trait</a>.</p>
 </li>
@@ -250,7 +249,7 @@ The two papers are found in my dissertation at:</p>
 </div>
 <p>There are several other programmatic incremental build systems and works published about them.
 This subsection discusses them.
-For additional related work discussion, check the related work sections of <a href="https://gkonat.github.io/assets/dissertation/konat_dissertation.pdf" title="" target="_blank">chapter 7 (page 104) and chapter 8 (page 126)</a> of my dissertation. </p>
+For additional related work discussion, check the related work sections of <a href="https://gkonat.github.io/assets/dissertation/konat_dissertation.pdf#page=126" title="" target="_blank">chapter 7 (page 104)</a> and <a href="https://gkonat.github.io/assets/dissertation/konat_dissertation.pdf#page=148" title="" target="_blank">chapter 8 (page 126)</a> of my dissertation. </p>
 <h3 id="pluto"><a class="header" href="#pluto">Pluto</a></h3>
 <p>PIE is based on <a href="https://www.pl.informatik.uni-mainz.de/files/2019/04/pluto-incremental-build.pdf" title="" target="_blank">Pluto</a>, a programmatic incremental build system developed by Sebastian Erdweg et al.
 This is not a coincidence, as Sebastian Erdweg was my PhD promotor, and coauthored the “Scalable Incremental Building with Dynamic Task Dependencies” paper.</p>
@@ -263,20 +262,53 @@ In PIE, the library handles this for you.
 The downside is that PIE requires a mapping from a <code>Task</code> (using its <code>Eq</code> and <code>Hash</code> impls) to its dependencies and output (which is what the <code>Store</code> does), and some modifications had to be done to the consistency checking routines.
 The upside is that tasks don’t have to manage these build unit files, and the central <code>Store</code> can efficiently manage the entire dependency graph.
 Especially this central dependency graph management is useful for the bottom-up build algorithm, as we can use <a href="http://www.doc.ic.ac.uk/~phjk/Publications/DynamicTopoSortAlg-JEA-07.pdf" title="" target="_blank">dynamic topological sort algorithms for directed acyclic graphs</a>.</p>
-<h3 id="other-programmatic-incremental-build-systems"><a class="header" href="#other-programmatic-incremental-build-systems">Other programmatic incremental build systems</a></h3>
+<h3 id="other-incremental-build-systems-with-dynamic-dependencies"><a class="header" href="#other-incremental-build-systems-with-dynamic-dependencies">Other incremental build systems with dynamic dependencies</a></h3>
 <p><a href="https://www.microsoft.com/en-us/research/uploads/prod/2018/03/build-systems.pdf" title="" target="_blank">Build Systems à la Carte</a> shows a systematic and executable framework (in Haskell) for developing and comparing build systems. It compares the impact of design decisions such as what persistent build information to store, the scheduler to use, static/dynamic dependencies, whether it is minimal, supports early cutoff, and whether it supports distributed (cloud) builds. 
 Even though the Haskell code might be a bit confusing if you’re not used to functional programming, it is a great paper that discusses many aspects of programmatic incremental build systems and how to implement them.</p>
-<p>shake</p>
+<h4 id="shake"><a class="header" href="#shake">Shake</a></h4>
+<p><a href="https://shakebuild.com/" title="" target="_blank">Shake</a> is an incremental build system implemented in Haskell, described in detail in the <a href="https://ndmitchell.com/downloads/paper-shake_before_building-10_sep_2012.pdf" title="" target="_blank">Shake Before Building</a> paper.
+The main difference in the model between Shake and PIE is that Shake follows a more target-based approach as seen in Make, where targets are build tasks that provide the files of the target.
+Therefore, the output (provided) files of a build task need to be known up-front.
+The upside of this approach is that build scripts are easier to read and write and easier to parallelize.
+However, the main downside is that it is not possible to express build tasks where the names of provided files are only known after executing the task.
+For example, compiling a Java class with inner classes results in a class file for every inner class with a name based on the outer and inner class, which is not known up-front.</p>
+<p>Implementation wise, Shake can do parallel builds whereas PIE cannot (at the time of writing).
+Parallel builds in PIE are tricky because two build tasks executing in parallel could require/provide (read/write) to the same file, which can result in data races.
+Shake avoids this issue by requiring provided files to be specified as targets up-front, speeding up builds through parallelism.
+In PIE, this might be solvable with a protocol where tasks first call a <code>Context</code> method to tell PIE about the files that will be provided, or the directory in which files will be provided, so PIE can limit parallelism on those files and directories.
+Tasks that do not know this up-front cannot be executed in parallel, but can still be executed normally.</p>
+<h4 id="rattle"><a class="header" href="#rattle">Rattle</a></h4>
+<p><a href="https://github.com/ndmitchell/rattle" title="" target="_blank">Rattle</a> is a build system focussing on easily turning build scripts into incremental and parallel build scripts without requiring dependency annotations, described in detail in the <a href="https://ndmitchell.com/downloads/paper-build_scripts_with_perfect_dependencies-18_nov_2020.pdf" title="" target="_blank">Build Scripts with Perfect Dependencies</a> paper. 
+To make this possible, Rattle has a very different model compared to PIE.</p>
+<p>Rattle build scripts consist of (terminal/command-line) commands such as <code>gcc -c main.c</code>, and simple control logic/manipulation to work with the results of commands, such as if checks, for loops, or changing the file extension in a path.
+Therefore, future commands can use values of previous commands, and use control logic to selectively or iteratively execute commands.
+Commands create dynamic file dependencies, both reading (require) and writing (provide), which are automatically detected with dependency tracing on the OS level.
+There are no explicit dependencies between commands, but implicit dependencies arise when a command reads a file that another command writes for example.</p>
+<p>Rattle incrementally executes the commands of a build script, skipping commands for which no files have changed.
+The control logic/manipulation around the commands is not incrementalized.
+Rattle build scripts can be explicitly parallelized, but Rattle also implicitly parallelizes builds by speculatively executing future commands.
+If speculation results in a hazard, such as a command reading a file and then a command writing to that file – equivalent to a hidden dependency in PIE – then the build is inconsistent and must be restarted without speculative parallelism.</p>
+<p>The best way I can explain the core difference is that Rattle builds a <em>single build script</em> which is a <em>stream of commands</em> with <em>file dependencies</em>; whereas in PIE, every build task is in essence <em>its own build script</em> that <em>produces an output value</em>, with file dependencies but also <em>dependencies between build tasks</em>.
+Both models have merit!</p>
+<p>The primary advantage of the Rattle model is that existing build scripts, such as Make scripts or even just Bash scripts, can be easily converted to Rattle build scripts by converting the commands and control logic/manipulation into Rattle.
+No file dependencies have to be specified since they are automatically detected with file dependency tracing.
+Then, Rattle can parallelize and incrementally execute the build script.
+Therefore, Rattle is great for incrementalizing and parallelizing existing Make/Bash/similar build scripts with very low effort.</p>
+<p>While it is possible to incrementalize these kind of builds in PIE, the effort will be higher due to having to split commands into task, and having to report the file dependencies to PIE.
+If PIE had access to reliable cross-platform automated file dependency tracing, we could reduce this effort by building a “command task” that executes arbitrary terminal/command-line commands.
+However, reliable cross-platform file dependency tracking does not exist (to my knowledge, at the time of writing).
+The library that Rattle uses, <a href="https://github.com/jacereda/fsatrace" title="" target="_blank">Fsatrace</a>, has limitations such as not detecting reads/writes to directories, and having to disable system integrity protection on macOS.
+Therefore, Rattle also (as mentioned in the paper, frustratingly) inherits the limitations of this library.</p>
+<p>Compared to Rattle, the primary advantages of programmatic incremental build systems (i.e., the PIE model) are: </p>
 <ul>
-<li><a href="https://shakebuild.com/" target="_blank">https://shakebuild.com/</a></li>
-<li><a href="https://dl.acm.org/doi/10.1145/2976002.2976011" title="" target="_blank">Non-recursive make considered harmful: build systems at scale</a></li>
-<li><a href="https://dl.acm.org/doi/10.1145/2364527.2364538" title="" target="_blank">Shake before building: replacing make with haskell</a></li>
+<li>The entire build is incrementalized (using tasks as a boundary), not just commands.</li>
+<li>PIE can <em>rebuild a subset of the build script</em>, instead of only the entire build script.</li>
+<li>Tasks can return any value of the programming language, not just strings.</li>
+<li>Tasks are modular, and can be shared using the mechanism of the programming language.</li>
 </ul>
-<p>Rattle</p>
-<ul>
-<li><a href="https://github.com/ndmitchell/rattle" target="_blank">https://github.com/ndmitchell/rattle</a></li>
-<li><a href="https://ndmitchell.com/downloads/paper-build_scripts_with_perfect_dependencies-18_nov_2020.pdf" title="" target="_blank">Build Scripts with Perfect Dependencies</a></li>
-</ul>
+<p>These properties are a necessity for use in interactive environments, such as a code editors, IDEs, or other using-facing interactive applications.
+Therefore, the PIE model is more suited towards incrementalization in interactive environment, but can still be used to do incremental batch builds.</p>
+<p>TODO: discuss parallelism, self-tracking, and cloud builds.</p>
 
                     </main>
 

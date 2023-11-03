@@ -218,9 +218,9 @@ edition = &quot;2021&quot;
 <p>This marks <code>pie</code> as a Rust library, with version “0.1.0” and using Rust edition 2021.
 The directory structure should look as follows (inside your <code>programmatic-builds</code> root directory):</p>
 <pre><code>pie
+├── Cargo.toml
 ├── src
 │   └── lib.rs
-├── Cargo.toml
 ├── Cargo.lock
 └── target
 </code></pre>
@@ -228,7 +228,7 @@ The directory structure should look as follows (inside your <code>programmatic-b
 Open up a terminal, go into the <code>pie</code> directory, and run <code>cargo build</code>.
 If all is well, the output should look something like:</p>
 <pre><code class="language-shell ">   Compiling pie v0.1.0 (/pie)
-    Finished dev [unoptimized + debuginfo] target(s) in 0.07s
+    Finished dev [unoptimized + debuginfo] target(s) in 0.09s
 </code></pre>
 <div id="admonition-important-1" class="admonition admonish-warning">
 <div class="admonition-title">
