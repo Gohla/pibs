@@ -18,4 +18,9 @@
   - [Prevent Overlapping File Writes](./3_min_sound/5_overlap/index.md)
   - [Prevent Hidden Dependencies](./3_min_sound/6_hidden_dep/index.md)
   - [Prevent Cycles](./3_min_sound/7_cycle/index.md)
-- [What's Next?](./4_next/index.md)
+
+# Appendix
+
+* [PIE Implementations & Publications](./a_appendix/1_pie.md)
+* [Related Work](./a_appendix/2_related_work.md)
+* [Future Work](./a_appendix/3_future_work.md)

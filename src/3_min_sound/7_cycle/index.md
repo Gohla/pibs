@@ -155,4 +155,4 @@ You can [download the source files up to this point](../../gen/3_min_sound/7_cyc
 ```
 
 This is currently the end of the guided programming tutorial.
-In the next chapter, we discuss future work, the PIE library implementations and publications about PIE, and other related work.
+In the appendix chapters, we discuss PIE implementations and publications, related work, and future work.
