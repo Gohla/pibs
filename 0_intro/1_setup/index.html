@@ -182,7 +182,8 @@ Therefore, first make sure <a href="https://www.rust-lang.org/tools/install" tit
 <p>If you already have Rust installed, make sure to update to at least Rust 1.65.0 (Nov 2022), as we’re using features only available from that release.</p>
 <p>Once Rust is installed, you should have access to <a href="https://doc.rust-lang.org/cargo/" title="" target="_blank">cargo</a>.
 Cargo is Rust’s package manager but also the command-line tool that ties everything together.
-Verify your Rust installation by running <code>cargo</code> from the command-line, which will show the help page for the cargo command.</p>
+As a consequence, Rust and Cargo are often used interchangeably when talking about developing Rust code.</p>
+<p>Verify your Rust installation by running <code>cargo</code> from the command-line, which will show the help page for the cargo command.</p>
 <h2 id="rust-editor--ide"><a class="header" href="#rust-editor--ide">Rust Editor / IDE</a></h2>
 <p>This tutorial does not require a specific Rust editor or IDE.
 All you need is some way to edit files, and some way to run <code>cargo</code>.</p>
@@ -193,71 +194,82 @@ At the time of writing, RustRover is still in early access preview, meaning that
 However, it is very stable despite being in preview.
 Once RustRover comes out of preview, you will need to pay for it though (or apply for a <a href="https://www.jetbrains.com/community/education/#students/" title="" target="_blank">free educational</a> or <a href="https://www.jetbrains.com/community/opensource/#support" title="" target="_blank">open source</a> license).</p>
 <h2 id="creating-a-new-rust-project"><a class="header" href="#creating-a-new-rust-project">Creating a new Rust project</a></h2>
-<p>In this tutorial, we will create a subset of the <a href="https://github.com/Gohla/pie" title="" target="_blank">PIE in Rust</a> library, so we want to create a Rust library called <code>pie</code>.
-However, later on in the tutorial we will also create an additional library for unit testing utilities, so we need to set up a Rust project that supports multiple libraries.</p>
-<p>Therefore, first create a <code>programmatic-builds</code> directory, which will serve as the root directory of the project.
-This does not have to be called <code>programmatic-builds</code>, you can use a different name.</p>
+<p>In this tutorial, we will create a subset of the <a href="https://github.com/Gohla/pie" title="" target="_blank">PIE in Rust</a> library, so we want to create a Rust package called <code>pie</code>.
+However, later on in the tutorial we will also create an additional package (for unit testing utilities), so we need to set up a Rust <em>workspace</em> that supports multiple packages.</p>
+<p>Therefore, first create a <code>pibs</code> directory, which will serve as the workspace directory of the project.
+This does not have to be called <code>pibs</code>, you can use a different name.
+Then create the <code>pibs/Cargo.toml</code> file with the following contents:</p>
+<pre><code class="language-toml ">[workspace]
+members = [
+  &quot;pie&quot;,
+]
+default-members = [
+  &quot;pie&quot;,
+]
+resolver = &quot;2&quot;
+</code></pre>
+<p>This <code>Cargo.toml</code> file marks the <code>pibs</code> directory as a Cargo workspace, with one (default) member package called <code>pie</code>.
+This package does not exist yet, but we will create it shortly.
+Because this <code>pibs</code> directory is now marked as a workspace, we can run <code>cargo</code> commands in this directory, and they will be automatically forwarded to the default members: currently only the <code>pie</code> package.</p>
+<p>Now let’s set up the <code>pie</code> package.
+Create the <code>pibs/pie</code> directory, and then create the <code>pibs/pie/Cargo.toml</code> file with the following contents:</p>
+<pre><code class="language-toml ">[package]
+name = &quot;pie&quot;
+version = &quot;0.1.0&quot;
+edition = &quot;2021&quot;
+</code></pre>
+<p>Then create the <code>pibs/pie/src</code> directory and create the <code>pibs/pie/src/lib.rs</code> file, which will be left empty for now.
+This marks <code>pie</code> as a Cargo package, with version “0.1.0” and using Rust edition 2021.
+The <code>lib.rs</code> file is the main library file of the <code>pie</code> package.</p>
+<p>The directory structure should look as follows:</p>
+<pre><code>pibs
+├── pie
+│   ├── Cargo.toml
+│   └── src
+│       └── lib.rs
+└── Cargo.toml
+</code></pre>
+<p>Now we can build the workspace to see if it was set up correctly.
+Open up a terminal, go back into the <code>pibs</code> workspace directory, and run <code>cargo build</code>.
+If all is well, the output should look something like:</p>
+<pre><code class="language-shell ">   Compiling pie v0.1.0 (/pie)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.06s
+</code></pre>
+<p>If you’re using a Rust editor or IDE, it probably also has a mechanism for running cargo on your project.
+You can of course use that in place of running cargo from a terminal. </p>
 <div id="admonition-important" class="admonition admonish-warning">
 <div class="admonition-title">
 <p>Important</p>
 <p><a class="admonition-anchor-link" href="#admonition-important"></a></p>
 </div>
 <div>
-<p>In the rest of the tutorial, we assume that you are in your <code>programmatic-builds</code> root directory.
-So if you are instructed to create files or directories, they are always relative to your <code>programmatic-builds</code> root directory!</p>
+<p>In the rest of the tutorial, we assume that you are in your <code>pibs</code> workspace directory.
+So if you are instructed to create files or directories, they are always relative to your <code>pibs</code> workspace directory!</p>
+<p>Also, if you are instructed to run <code>cargo</code> commands, always run them inside the <code>pibs</code> workspace directory!</p>
 </div>
 </div>
-<p>Now let’s set up the <code>pie</code> library.
-Create the <code>pie</code> directory, and then create the <code>pie/Cargo.toml</code> file with the following contents:</p>
-<pre><code class="language-toml ">[package]
-name = &quot;pie&quot;
-version = &quot;0.1.0&quot;
-edition = &quot;2021&quot;
-</code></pre>
-<p>Then create the <code>pie/src</code> directory and create the <code>pie/src/lib.rs</code> file, which will be left empty for now.</p>
-<p>This marks <code>pie</code> as a Rust library, with version “0.1.0” and using Rust edition 2021.
-The directory structure should look as follows (inside your <code>programmatic-builds</code> root directory):</p>
-<pre><code>pie
-├── Cargo.toml
-├── src
-│   └── lib.rs
-├── Cargo.lock
-└── target
-</code></pre>
-<p>Now we can build the project to see if it was set up correctly.
-Open up a terminal, go into the <code>pie</code> directory, and run <code>cargo build</code>.
-If all is well, the output should look something like:</p>
-<pre><code class="language-shell ">   Compiling pie v0.1.0 (/pie)
-    Finished dev [unoptimized + debuginfo] target(s) in 0.08s
-</code></pre>
-<div id="admonition-important-1" class="admonition admonish-warning">
-<div class="admonition-title">
-<p>Important</p>
-<p><a class="admonition-anchor-link" href="#admonition-important-1"></a></p>
-</div>
-<div>
-<p>In the rest of the tutorial, if you are instructed to run <code>cargo</code> commands, always run them inside the <code>pie</code> directory!</p>
-</div>
-</div>
-<p>If you’re using a Rust editor or IDE, it probably also has a mechanism for running cargo on your project.
-You can of course use that in place of running cargo from a terminal. </p>
-<details id="admonition-rust-editions" class="admonition admonish-tip">
+<details id="admonition-cargo-workspaces-packages-and-crates-rust-editions" class="admonition admonish-tip">
 <summary class="admonition-title">
-<p>Rust Editions</p>
-<p><a class="admonition-anchor-link" href="#admonition-rust-editions"></a></p>
+<p>Cargo Workspaces, Packages, and Crates; Rust Editions</p>
+<p><a class="admonition-anchor-link" href="#admonition-cargo-workspaces-packages-and-crates-rust-editions"></a></p>
 </summary>
 <div>
+<p><a href="https://doc.rust-lang.org/book/ch14-03-cargo-workspaces.html" title="" target="_blank">Cargo workspaces</a> enable development of Rust projects with multiple libraries (which are called <em>crates</em> in Rust).
+The <a href="https://doc.rust-lang.org/cargo/reference/workspaces.html" title="" target="_blank">reference page on workspaces</a> has more info regarding workspaces.</p>
+<p><a href="https://doc.rust-lang.org/book/ch07-01-packages-and-crates.html" title="" target="_blank">Cargo packages</a> can have up to one <em>library crate</em>, and many <em>binary crates</em>.
+A <em>crate</em> is the smallest amount of code that the Rust compiler considers at a time.
+However, the word <em>crate</em> is often used interchangeably with <em>library</em>.</p>
 <p><a href="https://doc.rust-lang.org/edition-guide/introduction.html" title="" target="_blank">Rust editions</a> enable new features as an opt-in, without breaking existing code.
 We use <a href="https://doc.rust-lang.org/edition-guide/rust-2021/index.html" title="" target="_blank">Rust edition 2021</a>, which is the latest edition at the time of writing.</p>
 </div>
 </details>
-<h2 id="source-control-optional"><a class="header" href="#source-control-optional">Source control (optional)</a></h2>
+<h2 id="source-control-optional-but-recommended"><a class="header" href="#source-control-optional-but-recommended">Source control (optional but recommended)</a></h2>
 <p>I recommend storing your code in a source control system such as <a href="https://git-scm.com/" title="" target="_blank">Git</a>, and uploading it to a source code hub such as <a href="https://github.com/" title="" target="_blank">GitHub</a>.
 A source control system allows you to look at changes and to go back to older versions, and uploading to a source code hub then provides a convenient backup.</p>
 <p>If you use Git, create the <code>pie/.gitignore</code> file with:</p>
 <pre><code class="language-.gitignore">/target
 </code></pre>
-<p>This ignores the <code>target</code> directory that Rust/Cargo uses to store intermediate and binary files.</p>
+<p>This ignores the <code>target</code> directory that Cargo uses to store intermediate and binary files.</p>
 <p>Continue to the next chapter where we will start implementing the “programmatic” part of programmatic incremental build systems.</p>
 <details id="admonition-download-source-code" class="admonition admonish-example">
 <summary class="admonition-title">

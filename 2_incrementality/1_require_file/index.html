@@ -250,6 +250,7 @@ You can also see this as a kind of method overloading, without having to provide
 </details>
 <p>Now we need to implement this method for <code>NonIncrementalContext</code>.
 However, because we will be performing similar file system operations in the incremental context as well, we will create some utility functions for this first.</p>
+<h2 id="filesystem-utilities"><a class="header" href="#filesystem-utilities">Filesystem utilities</a></h2>
 <p>Add the <code>fs</code> module to <code>pie/src/lib.rs</code>:</p>
 <div class="diff2html" id="diff2html_1"></div>
 <script>
@@ -326,11 +327,12 @@ The <code>r?</code> operator applied to a <code>Result</code> <code>r</code> doe
 </div>
 </details>
 <p>We will write some tests to confirm the behaviour, but for that we need utilities to create temporary files and directories.
-Furthermore, we will be writing more unit tests, integration tests, and even benchmarks in this tutorial, so we will set up these utilities in such a way that they are reachable by all these use cases.
-The only way to do that in Rust right now, is to create a separate crate and have the <code>pie</code> crate depend on it.</p>
+Furthermore, we will be writing more unit tests – but also integration tests – in this tutorial, so we will set up these utilities in such a way that they are reachable by both unit and integration tests.
+The only way to do that right now in Rust, is to create a separate package and have the <code>pie</code> package depend on it.</p>
 <p>And yes, we went from adding file dependencies, to creating file system utilities, to testing those file system utilities, to creating testing utilities, and now to making a crate for those testing utilities.
 Sorry about that 😅, we will start unwinding this stack soon!</p>
-<p>Next to the <code>pie</code> directory, create a directory named <code>dev_shared</code>.
+<h2 id="create-the-dev_shared-package"><a class="header" href="#create-the-dev_shared-package">Create the <code>dev_shared</code> package</a></h2>
+<p>Next to the <code>pie</code> directory, create a directory named <code>dev_shared</code> (i.e., the <code>pibs/dev_shared</code> directory where <code>pibs</code> is your workspace directory).
 Create the <code>dev_shared/Cargo.toml</code> file with the following contents:</p>
 <pre><code class="language-toml ">[package]
 name = &quot;dev_shared&quot;
@@ -340,7 +342,7 @@ edition = &quot;2021&quot;
 [dependencies]
 tempfile = &quot;3&quot;
 </code></pre>
-<p>We’ve added the <code>tempfile</code> dependency here already, which is a crate that creates and automatically cleans up temporary files and directories.</p>
+<p>We’ve added the <code>tempfile</code> dependency here already, which is a library that creates and automatically cleans up temporary files and directories.</p>
 <details id="admonition-rust-help-dependencies" class="admonition admonish-tip">
 <summary class="admonition-title">
 <p>Rust Help: Dependencies</p>
@@ -361,36 +363,23 @@ pub fn create_temp_file() -&gt; Result&lt;NamedTempFile, io::Error&gt; { NamedTe
 
 /// Creates a new temporary directory that gets cleaned up when dropped.
 pub fn create_temp_dir() -&gt; Result&lt;TempDir, io::Error&gt; { TempDir::new() }</code></pre>
-<p>Your directory structure should now look like this:</p>
-<pre><code>├── pie
-│   ├── Cargo.toml
-│   ├── src
-│   │   ├── fs.rs
-│   │   ├── context
-│   │   │   ├── non_incremental.rs
-│   │   │   └── mod.rs
-│   │   └── lib.rs
-│   ├── Cargo.lock
-│   └── target
-└── dev_shared
-    ├── Cargo.toml
-    └── src
-        └── lib.rs
-</code></pre>
-<p>To access these utility functions in the <code>pie</code> crate, add a dependency to <code>dev_shared</code> in <code>pie/Cargo.toml</code> along with another create that will help testing:</p>
+<p>Now add the <code>dev_shared</code> package to the members of the workspace in <code>Cargo.toml</code> (i.e., the <code>pibs/Cargo.toml</code> file where <code>pibs</code> is your workspace directory):</p>
 <div class="diff2html" id="diff2html_2"></div>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    let diff = String.raw`--- pie/Cargo.toml
-+++ pie/Cargo.toml
-@@ -2,3 +2,7 @@
- name = "pie"
- version = "0.1.0"
- edition = "2021"
-+
-+[dev-dependencies]
-+dev_shared = { path = "../dev_shared" }
-+assert_matches = "1"
+    let diff = String.raw`--- Cargo.toml
++++ Cargo.toml
+@@ -1,8 +1,10 @@
+ [workspace]
+ members = [
+   "pie",
++  "dev_shared",
+ ]
+ default-members = [
+   "pie",
++  "dev_shared",
+ ]
+ resolver = "2"
 `;
     let target = document.getElementById('diff2html_2');
     let configuration = {
@@ -405,9 +394,55 @@ pub fn create_temp_dir() -&gt; Result&lt;TempDir, io::Error&gt; { TempDir::new()
     diff2htmlUi.draw();
   });
 </script>
-<p>We’ve also added the <a href="https://crates.io/crates/assert_matches" title="" target="_blank">assert_matches</a> crate, which is a handy library for asserting that a value matches a pattern.
+<p>Your directory structure should now look like this:</p>
+<pre><code>pibs
+├── pie
+│   ├── Cargo.toml
+│   └── src
+│       ├── fs.rs
+│       ├── context
+│       │   ├── non_incremental.rs
+│       │   └── mod.rs
+│       └── lib.rs
+├── dev_shared
+│   ├── Cargo.toml
+│   └── src
+│       └── lib.rs
+└── Cargo.toml
+</code></pre>
+<p>To access these utility functions in the <code>pie</code> crate, add a dependency to <code>dev_shared</code> in <code>pie/Cargo.toml</code> along with another create that will help testing:</p>
+<div class="diff2html" id="diff2html_3"></div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    let diff = String.raw`--- pie/Cargo.toml
++++ pie/Cargo.toml
+@@ -2,3 +2,7 @@
+ name = "pie"
+ version = "0.1.0"
+ edition = "2021"
++
++[dev-dependencies]
++dev_shared = { path = "../dev_shared" }
++assert_matches = "1"
+`;
+    let target = document.getElementById('diff2html_3');
+    let configuration = {
+      drawFileList: false,
+      fileListToggle: false,
+      fileContentToggle: false,
+
+      outputFormat: 'line-by-line',
+      matching: 'lines',
+    };
+    let diff2htmlUi = new Diff2HtmlUI(target, diff, configuration, hljs);
+    diff2htmlUi.draw();
+  });
+</script>
+<p>We’re using a <a href="https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#specifying-path-dependencies" title="" target="_blank">path dependency</a> to have <code>pie</code> depend on the <code>dev_shared</code> package at <code>&quot;../dev_shared&quot;</code> in the workspace.</p>
+<p>We’ve also added a dependency to <a href="https://crates.io/crates/assert_matches" title="" target="_blank">assert_matches</a>, which is a handy library for asserting that a value matches a pattern.
 Note that these dependencies are added under <code>dev-dependencies</code>, indicating that these dependencies are only available when running tests, benchmarks, and examples.
-Therefore, users of our library will not depend on these crates, which is good, because temporary file management and assertions are not necessary to users of the library.</p>
+Therefore, users of our library will not depend on these libraries, which is good, because temporary file management and assertions are not necessary to users of the library.</p>
+<h2 id="testing-filesystem-utilities"><a class="header" href="#testing-filesystem-utilities">Testing filesystem utilities</a></h2>
 <p>Back to testing our filesystem utilities.
 Add the following tests to <code>pie/src/fs.rs</code>:</p>
 <pre><code class="language-rust ">#[cfg(test)]
@@ -482,9 +517,10 @@ When a test returns an <code>Err</code>, the test fails.
 This allows us to write more concise tests using error propagation.</p>
 </div>
 </details>
+<h2 id="implement-require_file"><a class="header" href="#implement-require_file">Implement <code>require_file</code></a></h2>
 <p>Now we are done unwinding our stack and have filesystem and testing utilities.
 Make the non-incremental context compatible by changing <code>pie/src/context/non_incremental.rs</code>:</p>
-<div class="diff2html" id="diff2html_3"></div>
+<div class="diff2html" id="diff2html_4"></div>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     let diff = String.raw`--- pie/src/context/non_incremental.rs
@@ -508,7 +544,7 @@ Make the non-incremental context compatible by changing <code>pie/src/context/no
      task.execute(self)
    }
 `;
-    let target = document.getElementById('diff2html_3');
+    let target = document.getElementById('diff2html_4');
     let configuration = {
       drawFileList: false,
       fileListToggle: false,

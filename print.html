@@ -276,7 +276,8 @@ Therefore, first make sure <a href="https://www.rust-lang.org/tools/install" tit
 <p>If you already have Rust installed, make sure to update to at least Rust 1.65.0 (Nov 2022), as we’re using features only available from that release.</p>
 <p>Once Rust is installed, you should have access to <a href="https://doc.rust-lang.org/cargo/" title="" target="_blank">cargo</a>.
 Cargo is Rust’s package manager but also the command-line tool that ties everything together.
-Verify your Rust installation by running <code>cargo</code> from the command-line, which will show the help page for the cargo command.</p>
+As a consequence, Rust and Cargo are often used interchangeably when talking about developing Rust code.</p>
+<p>Verify your Rust installation by running <code>cargo</code> from the command-line, which will show the help page for the cargo command.</p>
 <h2 id="rust-editor--ide"><a class="header" href="#rust-editor--ide">Rust Editor / IDE</a></h2>
 <p>This tutorial does not require a specific Rust editor or IDE.
 All you need is some way to edit files, and some way to run <code>cargo</code>.</p>
@@ -287,71 +288,82 @@ At the time of writing, RustRover is still in early access preview, meaning that
 However, it is very stable despite being in preview.
 Once RustRover comes out of preview, you will need to pay for it though (or apply for a <a href="https://www.jetbrains.com/community/education/#students/" title="" target="_blank">free educational</a> or <a href="https://www.jetbrains.com/community/opensource/#support" title="" target="_blank">open source</a> license).</p>
 <h2 id="creating-a-new-rust-project"><a class="header" href="#creating-a-new-rust-project">Creating a new Rust project</a></h2>
-<p>In this tutorial, we will create a subset of the <a href="https://github.com/Gohla/pie" title="" target="_blank">PIE in Rust</a> library, so we want to create a Rust library called <code>pie</code>.
-However, later on in the tutorial we will also create an additional library for unit testing utilities, so we need to set up a Rust project that supports multiple libraries.</p>
-<p>Therefore, first create a <code>programmatic-builds</code> directory, which will serve as the root directory of the project.
-This does not have to be called <code>programmatic-builds</code>, you can use a different name.</p>
+<p>In this tutorial, we will create a subset of the <a href="https://github.com/Gohla/pie" title="" target="_blank">PIE in Rust</a> library, so we want to create a Rust package called <code>pie</code>.
+However, later on in the tutorial we will also create an additional package (for unit testing utilities), so we need to set up a Rust <em>workspace</em> that supports multiple packages.</p>
+<p>Therefore, first create a <code>pibs</code> directory, which will serve as the workspace directory of the project.
+This does not have to be called <code>pibs</code>, you can use a different name.
+Then create the <code>pibs/Cargo.toml</code> file with the following contents:</p>
+<pre><code class="language-toml ">[workspace]
+members = [
+  &quot;pie&quot;,
+]
+default-members = [
+  &quot;pie&quot;,
+]
+resolver = &quot;2&quot;
+</code></pre>
+<p>This <code>Cargo.toml</code> file marks the <code>pibs</code> directory as a Cargo workspace, with one (default) member package called <code>pie</code>.
+This package does not exist yet, but we will create it shortly.
+Because this <code>pibs</code> directory is now marked as a workspace, we can run <code>cargo</code> commands in this directory, and they will be automatically forwarded to the default members: currently only the <code>pie</code> package.</p>
+<p>Now let’s set up the <code>pie</code> package.
+Create the <code>pibs/pie</code> directory, and then create the <code>pibs/pie/Cargo.toml</code> file with the following contents:</p>
+<pre><code class="language-toml ">[package]
+name = &quot;pie&quot;
+version = &quot;0.1.0&quot;
+edition = &quot;2021&quot;
+</code></pre>
+<p>Then create the <code>pibs/pie/src</code> directory and create the <code>pibs/pie/src/lib.rs</code> file, which will be left empty for now.
+This marks <code>pie</code> as a Cargo package, with version “0.1.0” and using Rust edition 2021.
+The <code>lib.rs</code> file is the main library file of the <code>pie</code> package.</p>
+<p>The directory structure should look as follows:</p>
+<pre><code>pibs
+├── pie
+│   ├── Cargo.toml
+│   └── src
+│       └── lib.rs
+└── Cargo.toml
+</code></pre>
+<p>Now we can build the workspace to see if it was set up correctly.
+Open up a terminal, go back into the <code>pibs</code> workspace directory, and run <code>cargo build</code>.
+If all is well, the output should look something like:</p>
+<pre><code class="language-shell ">   Compiling pie v0.1.0 (/pie)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.06s
+</code></pre>
+<p>If you’re using a Rust editor or IDE, it probably also has a mechanism for running cargo on your project.
+You can of course use that in place of running cargo from a terminal. </p>
 <div id="admonition-important" class="admonition admonish-warning">
 <div class="admonition-title">
 <p>Important</p>
 <p><a class="admonition-anchor-link" href="0_intro/1_setup/index.html#admonition-important"></a></p>
 </div>
 <div>
-<p>In the rest of the tutorial, we assume that you are in your <code>programmatic-builds</code> root directory.
-So if you are instructed to create files or directories, they are always relative to your <code>programmatic-builds</code> root directory!</p>
+<p>In the rest of the tutorial, we assume that you are in your <code>pibs</code> workspace directory.
+So if you are instructed to create files or directories, they are always relative to your <code>pibs</code> workspace directory!</p>
+<p>Also, if you are instructed to run <code>cargo</code> commands, always run them inside the <code>pibs</code> workspace directory!</p>
 </div>
 </div>
-<p>Now let’s set up the <code>pie</code> library.
-Create the <code>pie</code> directory, and then create the <code>pie/Cargo.toml</code> file with the following contents:</p>
-<pre><code class="language-toml ">[package]
-name = &quot;pie&quot;
-version = &quot;0.1.0&quot;
-edition = &quot;2021&quot;
-</code></pre>
-<p>Then create the <code>pie/src</code> directory and create the <code>pie/src/lib.rs</code> file, which will be left empty for now.</p>
-<p>This marks <code>pie</code> as a Rust library, with version “0.1.0” and using Rust edition 2021.
-The directory structure should look as follows (inside your <code>programmatic-builds</code> root directory):</p>
-<pre><code>pie
-├── Cargo.toml
-├── src
-│   └── lib.rs
-├── Cargo.lock
-└── target
-</code></pre>
-<p>Now we can build the project to see if it was set up correctly.
-Open up a terminal, go into the <code>pie</code> directory, and run <code>cargo build</code>.
-If all is well, the output should look something like:</p>
-<pre><code class="language-shell ">   Compiling pie v0.1.0 (/pie)
-    Finished dev [unoptimized + debuginfo] target(s) in 0.08s
-</code></pre>
-<div id="admonition-important-1" class="admonition admonish-warning">
-<div class="admonition-title">
-<p>Important</p>
-<p><a class="admonition-anchor-link" href="0_intro/1_setup/index.html#admonition-important-1"></a></p>
-</div>
-<div>
-<p>In the rest of the tutorial, if you are instructed to run <code>cargo</code> commands, always run them inside the <code>pie</code> directory!</p>
-</div>
-</div>
-<p>If you’re using a Rust editor or IDE, it probably also has a mechanism for running cargo on your project.
-You can of course use that in place of running cargo from a terminal. </p>
-<details id="admonition-rust-editions" class="admonition admonish-tip">
+<details id="admonition-cargo-workspaces-packages-and-crates-rust-editions" class="admonition admonish-tip">
 <summary class="admonition-title">
-<p>Rust Editions</p>
-<p><a class="admonition-anchor-link" href="0_intro/1_setup/index.html#admonition-rust-editions"></a></p>
+<p>Cargo Workspaces, Packages, and Crates; Rust Editions</p>
+<p><a class="admonition-anchor-link" href="0_intro/1_setup/index.html#admonition-cargo-workspaces-packages-and-crates-rust-editions"></a></p>
 </summary>
 <div>
+<p><a href="https://doc.rust-lang.org/book/ch14-03-cargo-workspaces.html" title="" target="_blank">Cargo workspaces</a> enable development of Rust projects with multiple libraries (which are called <em>crates</em> in Rust).
+The <a href="https://doc.rust-lang.org/cargo/reference/workspaces.html" title="" target="_blank">reference page on workspaces</a> has more info regarding workspaces.</p>
+<p><a href="https://doc.rust-lang.org/book/ch07-01-packages-and-crates.html" title="" target="_blank">Cargo packages</a> can have up to one <em>library crate</em>, and many <em>binary crates</em>.
+A <em>crate</em> is the smallest amount of code that the Rust compiler considers at a time.
+However, the word <em>crate</em> is often used interchangeably with <em>library</em>.</p>
 <p><a href="https://doc.rust-lang.org/edition-guide/introduction.html" title="" target="_blank">Rust editions</a> enable new features as an opt-in, without breaking existing code.
 We use <a href="https://doc.rust-lang.org/edition-guide/rust-2021/index.html" title="" target="_blank">Rust edition 2021</a>, which is the latest edition at the time of writing.</p>
 </div>
 </details>
-<h2 id="source-control-optional"><a class="header" href="#source-control-optional">Source control (optional)</a></h2>
+<h2 id="source-control-optional-but-recommended"><a class="header" href="#source-control-optional-but-recommended">Source control (optional but recommended)</a></h2>
 <p>I recommend storing your code in a source control system such as <a href="https://git-scm.com/" title="" target="_blank">Git</a>, and uploading it to a source code hub such as <a href="https://github.com/" title="" target="_blank">GitHub</a>.
 A source control system allows you to look at changes and to go back to older versions, and uploading to a source code hub then provides a convenient backup.</p>
 <p>If you use Git, create the <code>pie/.gitignore</code> file with:</p>
 <pre><code class="language-.gitignore">/target
 </code></pre>
-<p>This ignores the <code>target</code> directory that Rust/Cargo uses to store intermediate and binary files.</p>
+<p>This ignores the <code>target</code> directory that Cargo uses to store intermediate and binary files.</p>
 <p>Continue to the next chapter where we will start implementing the “programmatic” part of programmatic incremental build systems.</p>
 <details id="admonition-download-source-code" class="admonition admonish-example">
 <summary class="admonition-title">
@@ -453,7 +465,7 @@ Because of this, the context reference passed to <code>Task::execute</code> is a
 <p>Build the project by running <code>cargo build</code>.
 The output should look something like:</p>
 <pre><code class="language-shell ">   Compiling pie v0.1.0 (/pie)
-    Finished dev [unoptimized + debuginfo] target(s) in 0.04s
+    Finished dev [unoptimized + debuginfo] target(s) in 0.03s
 </code></pre>
 <p>In the next section, we will implement a non-incremental <code>Context</code> and test it against <code>Task</code> implementations.</p>
 <details id="admonition-rust-help-modules-imports-ownership-traits-methods-supertraits-associated-types-visibility" class="admonition admonish-tip">
@@ -533,15 +545,15 @@ Create the <code>context</code> module by adding a module to <code>pie/src/lib.r
 <p>Both modules are public so that users of our library can access context implementations.</p>
 <p>Create the <code>pie/src/context/non_incremental.rs</code> file, it will be empty for now.
 Your project structure should now look like:</p>
-<pre><code>pie
-├── Cargo.toml
-├── src
-│   ├── context
-│   │   ├── non_incremental.rs
-│   │   └── mod.rs
-│   └── lib.rs
-├── Cargo.lock
-└── target
+<pre><code>pibs
+├── pie
+│   ├── Cargo.toml
+│   └── src
+│       ├── context
+│       │   ├── non_incremental.rs
+│       │   └── mod.rs
+│       └── lib.rs
+└── Cargo.toml
 </code></pre>
 <p>Confirm your module structure is correct by building with <code>cargo build</code>.</p>
 <details id="admonition-rust-help-modules-visibility" class="admonition admonish-tip">
@@ -619,8 +631,8 @@ It returns the output of the task, which we test with <code>assert_eq!</code>.</
 <p>Run the test by running <code>cargo test</code>.
 The output should look something like:</p>
 <pre><code class="language-shell ">   Compiling pie v0.1.0 (/pie)
-    Finished test [unoptimized + debuginfo] target(s) in 0.35s
-     Running unittests src/lib.rs (/pie/target/debug/deps/pie-5f53e17c8d89d5dc)
+    Finished test [unoptimized + debuginfo] target(s) in 0.23s
+     Running unittests src/lib.rs (target/debug/deps/pie-e953712fa3fb64a0)
 
 running 1 test
 test context::non_incremental::test::test_require_task_direct ... ok
@@ -713,7 +725,7 @@ However, due to the way we’ve set up the types between <code>Task</code> and <
 Running <code>cargo test</code>, you should get these errors:</p>
 <pre><code class="language-shell ">   Compiling pie v0.1.0 (/pie)
 error[E0308]: mismatched types
-  --&gt; src/context/non_incremental.rs:47:30
+  --&gt; pie/src/context/non_incremental.rs:47:30
    |
 47 |         context.require_task(&amp;ReturnHelloWorld).to_lowercase()
    |                 ------------ ^^^^^^^^^^^^^^^^^ expected `&amp;ToLowerCase`, found `&amp;ReturnHelloWorld`
@@ -723,7 +735,7 @@ error[E0308]: mismatched types
    = note: expected reference `&amp;ToLowerCase`
               found reference `&amp;non_incremental::test::test_require_task_problematic::ReturnHelloWorld`
 note: method defined here
-  --&gt; src/lib.rs:18:6
+  --&gt; pie/src/lib.rs:18:6
    |
 18 |   fn require_task(&amp;mut self, task: &amp;T) -&gt; T::Output;
    |      ^^^^^^^^^^^^
@@ -765,12 +777,12 @@ This doesn’t work as <code>Context&lt;ToLowerCase&gt;::require_task</code> onl
 <p>But that is not allowed:</p>
 <pre><code class="language-shell ">   Compiling pie v0.1.0 (/pie)
 error[E0276]: impl has stricter requirements than trait
-  --&gt; src/context/non_incremental.rs:46:21
+  --&gt; pie/src/context/non_incremental.rs:46:21
    |
 46 |       fn execute&lt;C: Context&lt;ReturnHelloWorld&gt;&gt;(&amp;self, context: &amp;mut C) -&gt; Self::Output {
    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^ impl has extra requirement `C: Context&lt;non_incremental::test::test_require_task_problematic::ReturnHelloWorld&gt;`
    |
-  ::: src/lib.rs:11:3
+  ::: pie/src/lib.rs:11:3
    |
 11 |   fn execute&lt;C: Context&lt;Self&gt;&gt;(&amp;self, context: &amp;mut C) -&gt; Self::Output;
    |   --------------------------------------------------------------------- definition of `execute` from trait
@@ -1032,6 +1044,7 @@ You can also see this as a kind of method overloading, without having to provide
 </details>
 <p>Now we need to implement this method for <code>NonIncrementalContext</code>.
 However, because we will be performing similar file system operations in the incremental context as well, we will create some utility functions for this first.</p>
+<h2 id="filesystem-utilities"><a class="header" href="#filesystem-utilities">Filesystem utilities</a></h2>
 <p>Add the <code>fs</code> module to <code>pie/src/lib.rs</code>:</p>
 <div class="diff2html" id="diff2html_1"></div>
 <script>
@@ -1108,11 +1121,12 @@ The <code>r?</code> operator applied to a <code>Result</code> <code>r</code> doe
 </div>
 </details>
 <p>We will write some tests to confirm the behaviour, but for that we need utilities to create temporary files and directories.
-Furthermore, we will be writing more unit tests, integration tests, and even benchmarks in this tutorial, so we will set up these utilities in such a way that they are reachable by all these use cases.
-The only way to do that in Rust right now, is to create a separate crate and have the <code>pie</code> crate depend on it.</p>
+Furthermore, we will be writing more unit tests – but also integration tests – in this tutorial, so we will set up these utilities in such a way that they are reachable by both unit and integration tests.
+The only way to do that right now in Rust, is to create a separate package and have the <code>pie</code> package depend on it.</p>
 <p>And yes, we went from adding file dependencies, to creating file system utilities, to testing those file system utilities, to creating testing utilities, and now to making a crate for those testing utilities.
 Sorry about that 😅, we will start unwinding this stack soon!</p>
-<p>Next to the <code>pie</code> directory, create a directory named <code>dev_shared</code>.
+<h2 id="create-the-dev_shared-package"><a class="header" href="#create-the-dev_shared-package">Create the <code>dev_shared</code> package</a></h2>
+<p>Next to the <code>pie</code> directory, create a directory named <code>dev_shared</code> (i.e., the <code>pibs/dev_shared</code> directory where <code>pibs</code> is your workspace directory).
 Create the <code>dev_shared/Cargo.toml</code> file with the following contents:</p>
 <pre><code class="language-toml ">[package]
 name = &quot;dev_shared&quot;
@@ -1122,7 +1136,7 @@ edition = &quot;2021&quot;
 [dependencies]
 tempfile = &quot;3&quot;
 </code></pre>
-<p>We’ve added the <code>tempfile</code> dependency here already, which is a crate that creates and automatically cleans up temporary files and directories.</p>
+<p>We’ve added the <code>tempfile</code> dependency here already, which is a library that creates and automatically cleans up temporary files and directories.</p>
 <details id="admonition-rust-help-dependencies" class="admonition admonish-tip">
 <summary class="admonition-title">
 <p>Rust Help: Dependencies</p>
@@ -1143,36 +1157,23 @@ pub fn create_temp_file() -&gt; Result&lt;NamedTempFile, io::Error&gt; { NamedTe
 
 /// Creates a new temporary directory that gets cleaned up when dropped.
 pub fn create_temp_dir() -&gt; Result&lt;TempDir, io::Error&gt; { TempDir::new() }</code></pre>
-<p>Your directory structure should now look like this:</p>
-<pre><code>├── pie
-│   ├── Cargo.toml
-│   ├── src
-│   │   ├── fs.rs
-│   │   ├── context
-│   │   │   ├── non_incremental.rs
-│   │   │   └── mod.rs
-│   │   └── lib.rs
-│   ├── Cargo.lock
-│   └── target
-└── dev_shared
-    ├── Cargo.toml
-    └── src
-        └── lib.rs
-</code></pre>
-<p>To access these utility functions in the <code>pie</code> crate, add a dependency to <code>dev_shared</code> in <code>pie/Cargo.toml</code> along with another create that will help testing:</p>
+<p>Now add the <code>dev_shared</code> package to the members of the workspace in <code>Cargo.toml</code> (i.e., the <code>pibs/Cargo.toml</code> file where <code>pibs</code> is your workspace directory):</p>
 <div class="diff2html" id="diff2html_2"></div>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    let diff = String.raw`--- pie/Cargo.toml
-+++ pie/Cargo.toml
-@@ -2,3 +2,7 @@
- name = "pie"
- version = "0.1.0"
- edition = "2021"
-+
-+[dev-dependencies]
-+dev_shared = { path = "../dev_shared" }
-+assert_matches = "1"
+    let diff = String.raw`--- Cargo.toml
++++ Cargo.toml
+@@ -1,8 +1,10 @@
+ [workspace]
+ members = [
+   "pie",
++  "dev_shared",
+ ]
+ default-members = [
+   "pie",
++  "dev_shared",
+ ]
+ resolver = "2"
 `;
     let target = document.getElementById('diff2html_2');
     let configuration = {
@@ -1187,9 +1188,55 @@ pub fn create_temp_dir() -&gt; Result&lt;TempDir, io::Error&gt; { TempDir::new()
     diff2htmlUi.draw();
   });
 </script>
-<p>We’ve also added the <a href="https://crates.io/crates/assert_matches" title="" target="_blank">assert_matches</a> crate, which is a handy library for asserting that a value matches a pattern.
+<p>Your directory structure should now look like this:</p>
+<pre><code>pibs
+├── pie
+│   ├── Cargo.toml
+│   └── src
+│       ├── fs.rs
+│       ├── context
+│       │   ├── non_incremental.rs
+│       │   └── mod.rs
+│       └── lib.rs
+├── dev_shared
+│   ├── Cargo.toml
+│   └── src
+│       └── lib.rs
+└── Cargo.toml
+</code></pre>
+<p>To access these utility functions in the <code>pie</code> crate, add a dependency to <code>dev_shared</code> in <code>pie/Cargo.toml</code> along with another create that will help testing:</p>
+<div class="diff2html" id="diff2html_3"></div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    let diff = String.raw`--- pie/Cargo.toml
++++ pie/Cargo.toml
+@@ -2,3 +2,7 @@
+ name = "pie"
+ version = "0.1.0"
+ edition = "2021"
++
++[dev-dependencies]
++dev_shared = { path = "../dev_shared" }
++assert_matches = "1"
+`;
+    let target = document.getElementById('diff2html_3');
+    let configuration = {
+      drawFileList: false,
+      fileListToggle: false,
+      fileContentToggle: false,
+
+      outputFormat: 'line-by-line',
+      matching: 'lines',
+    };
+    let diff2htmlUi = new Diff2HtmlUI(target, diff, configuration, hljs);
+    diff2htmlUi.draw();
+  });
+</script>
+<p>We’re using a <a href="https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#specifying-path-dependencies" title="" target="_blank">path dependency</a> to have <code>pie</code> depend on the <code>dev_shared</code> package at <code>&quot;../dev_shared&quot;</code> in the workspace.</p>
+<p>We’ve also added a dependency to <a href="https://crates.io/crates/assert_matches" title="" target="_blank">assert_matches</a>, which is a handy library for asserting that a value matches a pattern.
 Note that these dependencies are added under <code>dev-dependencies</code>, indicating that these dependencies are only available when running tests, benchmarks, and examples.
-Therefore, users of our library will not depend on these crates, which is good, because temporary file management and assertions are not necessary to users of the library.</p>
+Therefore, users of our library will not depend on these libraries, which is good, because temporary file management and assertions are not necessary to users of the library.</p>
+<h2 id="testing-filesystem-utilities"><a class="header" href="#testing-filesystem-utilities">Testing filesystem utilities</a></h2>
 <p>Back to testing our filesystem utilities.
 Add the following tests to <code>pie/src/fs.rs</code>:</p>
 <pre><code class="language-rust ">#[cfg(test)]
@@ -1264,9 +1311,10 @@ When a test returns an <code>Err</code>, the test fails.
 This allows us to write more concise tests using error propagation.</p>
 </div>
 </details>
+<h2 id="implement-require_file"><a class="header" href="#implement-require_file">Implement <code>require_file</code></a></h2>
 <p>Now we are done unwinding our stack and have filesystem and testing utilities.
 Make the non-incremental context compatible by changing <code>pie/src/context/non_incremental.rs</code>:</p>
-<div class="diff2html" id="diff2html_3"></div>
+<div class="diff2html" id="diff2html_4"></div>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     let diff = String.raw`--- pie/src/context/non_incremental.rs
@@ -1290,7 +1338,7 @@ Make the non-incremental context compatible by changing <code>pie/src/context/no
      task.execute(self)
    }
 `;
-    let target = document.getElementById('diff2html_3');
+    let target = document.getElementById('diff2html_4');
     let configuration = {
       drawFileList: false,
       fileListToggle: false,
@@ -3453,8 +3501,8 @@ Run this example with <code>cargo run --example incremental</code>.
 You should see the <code>println!</code> in <code>ReadStringFromFile</code> appear in your console as the incremental context correctly determines that this task is new (i.e., has no output) and must be executed.
 It should look something like:</p>
 <pre><code>   Compiling pie v0.1.0 (/pie)
-    Finished dev [unoptimized + debuginfo] target(s) in 1.12s
-     Running `/pie/target/debug/examples/incremental`
+    Finished dev [unoptimized + debuginfo] target(s) in 0.60s
+     Running `target/debug/examples/incremental`
 A) New task: expect `read_task` to execute
 Reading from input.txt with Modified stamper
 </code></pre>
@@ -3468,8 +3516,8 @@ Reading from input.txt with Modified stamper
   assert_eq!(&amp;output, &quot;Hi&quot;);</code></pre>
 <p>Running with <code>cargo run --example incremental</code> should produce output like:</p>
 <pre><code>   Compiling pie v0.1.0 (/pie)
-    Finished dev [unoptimized + debuginfo] target(s) in 0.58s
-     Running `/pie/target/debug/examples/incremental`
+    Finished dev [unoptimized + debuginfo] target(s) in 0.34s
+     Running `target/debug/examples/incremental`
 A) New task: expect `read_task` to execute
 Reading from input.txt with Modified stamper
 
@@ -3530,8 +3578,8 @@ This shows that tasks can depend on the same file with different stampers, which
 <p>Of course, using an <code>Exists</code> stamper for <code>ReadStringFromFile</code> does not make a lot of sense, but this is for demonstration purposes only.</p>
 <p>Running <code>cargo run --example incremental</code> now should produce output like:</p>
 <pre><code>   Compiling pie v0.1.0 (/pie)
-    Finished dev [unoptimized + debuginfo] target(s) in 0.54s
-     Running `/pie/target/debug/examples/incremental`
+    Finished dev [unoptimized + debuginfo] target(s) in 0.34s
+     Running `target/debug/examples/incremental`
 A) New task: expect `read_task` to execute
 Reading from input.txt with Modified stamper
 
@@ -4813,55 +4861,55 @@ You can add configuration booleans to control what should be written, but in thi
 <p>We remove the <code>println!</code> statements from tasks and create <code>Pie</code> with <code>WritingTracker</code>.
 Now run the example with <code>cargo run --example incremental</code>, and you should see the writing tracker print to standard output:</p>
 <pre><code>   Compiling pie v0.1.0 (/pie)
-    Finished dev [unoptimized + debuginfo] target(s) in 0.69s
-     Running `/pie/target/debug/examples/incremental`
+    Finished dev [unoptimized + debuginfo] target(s) in 0.44s
+     Running `target/debug/examples/incremental`
 A) New task: expect `read_task` to execute
-→ ReadStringFromFile(&quot;/tmp/.tmpCgfnOf/input.txt&quot;, Modified)
- ▶ ReadStringFromFile(&quot;/tmp/.tmpCgfnOf/input.txt&quot;, Modified)
-  - /tmp/.tmpCgfnOf/input.txt
+→ ReadStringFromFile(&quot;/tmp/.tmp6lJRDl/input.txt&quot;, Modified)
+ ▶ ReadStringFromFile(&quot;/tmp/.tmp6lJRDl/input.txt&quot;, Modified)
+  - /tmp/.tmp6lJRDl/input.txt
  ◀ Ok(&quot;Hi&quot;)
 ← Ok(&quot;Hi&quot;)
 🏁
 
 B) Reuse: expect no execution
-→ ReadStringFromFile(&quot;/tmp/.tmpCgfnOf/input.txt&quot;, Modified)
- ✓ /tmp/.tmpCgfnOf/input.txt
+→ ReadStringFromFile(&quot;/tmp/.tmp6lJRDl/input.txt&quot;, Modified)
+ ✓ /tmp/.tmp6lJRDl/input.txt
 ← Ok(&quot;Hi&quot;)
 🏁
 
 C) Inconsistent file dependency: expect `read_task` to execute
-→ ReadStringFromFile(&quot;/tmp/.tmpCgfnOf/input.txt&quot;, Modified)
- ✗ /tmp/.tmpCgfnOf/input.txt (old: Modified(Some(SystemTime { tv_sec: 1699279001, tv_nsec: 669315210 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1699279001, tv_nsec: 673315234 })))
- ▶ ReadStringFromFile(&quot;/tmp/.tmpCgfnOf/input.txt&quot;, Modified)
-  - /tmp/.tmpCgfnOf/input.txt
+→ ReadStringFromFile(&quot;/tmp/.tmp6lJRDl/input.txt&quot;, Modified)
+ ✗ /tmp/.tmp6lJRDl/input.txt (old: Modified(Some(SystemTime { tv_sec: 1699284325, tv_nsec: 408942737 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1699284325, tv_nsec: 412942717 })))
+ ▶ ReadStringFromFile(&quot;/tmp/.tmp6lJRDl/input.txt&quot;, Modified)
+  - /tmp/.tmp6lJRDl/input.txt
  ◀ Ok(&quot;Hello&quot;)
 ← Ok(&quot;Hello&quot;)
 🏁
 
 D) Different tasks: expect `read_task_b_modified` and `read_task_b_exists` to execute
-→ ReadStringFromFile(&quot;/tmp/.tmpCgfnOf/input_b.txt&quot;, Modified)
- ▶ ReadStringFromFile(&quot;/tmp/.tmpCgfnOf/input_b.txt&quot;, Modified)
-  - /tmp/.tmpCgfnOf/input_b.txt
+→ ReadStringFromFile(&quot;/tmp/.tmp6lJRDl/input_b.txt&quot;, Modified)
+ ▶ ReadStringFromFile(&quot;/tmp/.tmp6lJRDl/input_b.txt&quot;, Modified)
+  - /tmp/.tmp6lJRDl/input_b.txt
  ◀ Ok(&quot;Test&quot;)
 ← Ok(&quot;Test&quot;)
 🏁
-→ ReadStringFromFile(&quot;/tmp/.tmpCgfnOf/input_b.txt&quot;, Exists)
- ▶ ReadStringFromFile(&quot;/tmp/.tmpCgfnOf/input_b.txt&quot;, Exists)
-  - /tmp/.tmpCgfnOf/input_b.txt
+→ ReadStringFromFile(&quot;/tmp/.tmp6lJRDl/input_b.txt&quot;, Exists)
+ ▶ ReadStringFromFile(&quot;/tmp/.tmp6lJRDl/input_b.txt&quot;, Exists)
+  - /tmp/.tmp6lJRDl/input_b.txt
  ◀ Ok(&quot;Test&quot;)
 ← Ok(&quot;Test&quot;)
 🏁
 
 E) Different stampers: expect only `read_task_b_modified` to execute
-→ ReadStringFromFile(&quot;/tmp/.tmpCgfnOf/input_b.txt&quot;, Modified)
- ✗ /tmp/.tmpCgfnOf/input_b.txt (old: Modified(Some(SystemTime { tv_sec: 1699279001, tv_nsec: 673315234 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1699279001, tv_nsec: 677315258 })))
- ▶ ReadStringFromFile(&quot;/tmp/.tmpCgfnOf/input_b.txt&quot;, Modified)
-  - /tmp/.tmpCgfnOf/input_b.txt
+→ ReadStringFromFile(&quot;/tmp/.tmp6lJRDl/input_b.txt&quot;, Modified)
+ ✗ /tmp/.tmp6lJRDl/input_b.txt (old: Modified(Some(SystemTime { tv_sec: 1699284325, tv_nsec: 412942717 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1699284325, tv_nsec: 416942698 })))
+ ▶ ReadStringFromFile(&quot;/tmp/.tmp6lJRDl/input_b.txt&quot;, Modified)
+  - /tmp/.tmp6lJRDl/input_b.txt
  ◀ Ok(&quot;Test Test&quot;)
 ← Ok(&quot;Test Test&quot;)
 🏁
-→ ReadStringFromFile(&quot;/tmp/.tmpCgfnOf/input_b.txt&quot;, Exists)
- ✓ /tmp/.tmpCgfnOf/input_b.txt
+→ ReadStringFromFile(&quot;/tmp/.tmp6lJRDl/input_b.txt&quot;, Exists)
+ ✓ /tmp/.tmp6lJRDl/input_b.txt
 ← Ok(&quot;Test&quot;)
 🏁
 </code></pre>
@@ -5451,8 +5499,8 @@ If you want to see the standard output, either:</p>
 <li>Run a <a href="https://doc.rust-lang.org/book/ch11-02-running-tests.html#running-single-tests" title="" target="_blank">single test</a> in the <code>top_down</code> integration test file with: <code>cargo test --test top_down test_reuse</code></li>
 </ul>
 <p>The second command should result in something like:</p>
-<pre><code>    Finished test [unoptimized + debuginfo] target(s) in 0.02s
-     Running tests/top_down.rs (/pie/target/debug/deps/top_down-40d7d2b5b9c4766e)
+<pre><code>    Finished test [unoptimized + debuginfo] target(s) in 0.01s
+     Running tests/top_down.rs (target/debug/deps/top_down-becb1588a9ee205d)
 
 running 1 test
 → Return(&quot;Hello, World!&quot;)
@@ -6226,23 +6274,23 @@ How can that be?</p>
 </div>
 <p>Inspect the build log with <code>cargo test --test top_down test_no_superfluous_task_dependencies</code>.
 The third (last) build log should look like this:</p>
-<pre><code>→ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmp1NobPl/in.txt&quot;, Modified)))
- ? ReadFile(&quot;/tmp/.tmp1NobPl/in.txt&quot;, Modified)
-  → ReadFile(&quot;/tmp/.tmp1NobPl/in.txt&quot;, Modified)
-   ✗ /tmp/.tmp1NobPl/in.txt (old: Modified(Some(SystemTime { tv_sec: 1699279012, tv_nsec: 573384027 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1699279012, tv_nsec: 577384054 })))
-   ▶ ReadFile(&quot;/tmp/.tmp1NobPl/in.txt&quot;, Modified)
-    - /tmp/.tmp1NobPl/in.txt
+<pre><code>→ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmpdu97HB/in.txt&quot;, Modified)))
+ ? ReadFile(&quot;/tmp/.tmpdu97HB/in.txt&quot;, Modified)
+  → ReadFile(&quot;/tmp/.tmpdu97HB/in.txt&quot;, Modified)
+   ✗ /tmp/.tmpdu97HB/in.txt (old: Modified(Some(SystemTime { tv_sec: 1699284332, tv_nsec: 332907631 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1699284332, tv_nsec: 364907469 })))
+   ▶ ReadFile(&quot;/tmp/.tmpdu97HB/in.txt&quot;, Modified)
+    - /tmp/.tmpdu97HB/in.txt
    ◀ Ok(String(&quot;HeLLo, WorLd!&quot;))
   ← Ok(String(&quot;HeLLo, WorLd!&quot;))
- ✗ ReadFile(&quot;/tmp/.tmp1NobPl/in.txt&quot;, Modified) (old: Equals(Ok(String(&quot;Hello, World!&quot;))) ≠ new: Equals(Ok(String(&quot;HeLLo, WorLd!&quot;))))
- ▶ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmp1NobPl/in.txt&quot;, Modified)))
-  → ToLower(ReadFile(&quot;/tmp/.tmp1NobPl/in.txt&quot;, Modified))
-   ? ReadFile(&quot;/tmp/.tmp1NobPl/in.txt&quot;, Modified)
-    → ReadFile(&quot;/tmp/.tmp1NobPl/in.txt&quot;, Modified)
+ ✗ ReadFile(&quot;/tmp/.tmpdu97HB/in.txt&quot;, Modified) (old: Equals(Ok(String(&quot;Hello, World!&quot;))) ≠ new: Equals(Ok(String(&quot;HeLLo, WorLd!&quot;))))
+ ▶ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmpdu97HB/in.txt&quot;, Modified)))
+  → ToLower(ReadFile(&quot;/tmp/.tmpdu97HB/in.txt&quot;, Modified))
+   ? ReadFile(&quot;/tmp/.tmpdu97HB/in.txt&quot;, Modified)
+    → ReadFile(&quot;/tmp/.tmpdu97HB/in.txt&quot;, Modified)
     ← Ok(String(&quot;HeLLo, WorLd!&quot;))
-   ✗ ReadFile(&quot;/tmp/.tmp1NobPl/in.txt&quot;, Modified) (old: Equals(Ok(String(&quot;Hello, World!&quot;))) ≠ new: Equals(Ok(String(&quot;HeLLo, WorLd!&quot;))))
-   ▶ ToLower(ReadFile(&quot;/tmp/.tmp1NobPl/in.txt&quot;, Modified))
-    → ReadFile(&quot;/tmp/.tmp1NobPl/in.txt&quot;, Modified)
+   ✗ ReadFile(&quot;/tmp/.tmpdu97HB/in.txt&quot;, Modified) (old: Equals(Ok(String(&quot;Hello, World!&quot;))) ≠ new: Equals(Ok(String(&quot;HeLLo, WorLd!&quot;))))
+   ▶ ToLower(ReadFile(&quot;/tmp/.tmpdu97HB/in.txt&quot;, Modified))
+    → ReadFile(&quot;/tmp/.tmpdu97HB/in.txt&quot;, Modified)
     ← Ok(String(&quot;HeLLo, WorLd!&quot;))
    ◀ Ok(String(&quot;hello, world!&quot;))
   ← Ok(String(&quot;hello, world!&quot;))
@@ -6309,14 +6357,14 @@ Even if we are only <em>consistency checking</em> a task to see if it should be 
 We only manifested the bug in the last test due to having a chain of 2 task dependencies, and by carefully controlling what is being executed and what is being checked.</p>
 <p>Recall the second build in the <code>test_no_superfluous_task_dependencies</code> test.
 The build log for that build looks like:</p>
-<pre><code>→ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmp1NobPl/in.txt&quot;, Modified)))
- ▶ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmp1NobPl/in.txt&quot;, Modified)))
-  → ToLower(ReadFile(&quot;/tmp/.tmp1NobPl/in.txt&quot;, Modified))
-   ? ReadFile(&quot;/tmp/.tmp1NobPl/in.txt&quot;, Modified)
-    → ReadFile(&quot;/tmp/.tmp1NobPl/in.txt&quot;, Modified)
-     ✓ /tmp/.tmp1NobPl/in.txt
+<pre><code>→ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmpdu97HB/in.txt&quot;, Modified)))
+ ▶ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmpdu97HB/in.txt&quot;, Modified)))
+  → ToLower(ReadFile(&quot;/tmp/.tmpdu97HB/in.txt&quot;, Modified))
+   ? ReadFile(&quot;/tmp/.tmpdu97HB/in.txt&quot;, Modified)
+    → ReadFile(&quot;/tmp/.tmpdu97HB/in.txt&quot;, Modified)
+     ✓ /tmp/.tmpdu97HB/in.txt
     ← Ok(String(&quot;Hello, World!&quot;))
-   ✓ ReadFile(&quot;/tmp/.tmp1NobPl/in.txt&quot;, Modified)
+   ✓ ReadFile(&quot;/tmp/.tmpdu97HB/in.txt&quot;, Modified)
   ← Ok(String(&quot;hello, world!&quot;))
  ◀ Ok(String(&quot;HELLO, WORLD!&quot;))
 ← Ok(String(&quot;HELLO, WORLD!&quot;))
@@ -6595,24 +6643,24 @@ However, <code>test_require_task</code> now fails 😅.</p>
 This is because our changes have correctly removed several superfluous task requires, which influences these assertions.</p>
 <p>Inspect the build log for this test with <code>cargo test --test top_down test_require_task</code>.
 The second build now looks like:</p>
-<pre><code>→ ToLower(ReadFile(&quot;/tmp/.tmpbIbmoX/in.txt&quot;, Modified))
- ? ReadFile(&quot;/tmp/.tmpbIbmoX/in.txt&quot;, Modified)
-  ✓ /tmp/.tmpbIbmoX/in.txt
- ✓ ReadFile(&quot;/tmp/.tmpbIbmoX/in.txt&quot;, Modified)
+<pre><code>→ ToLower(ReadFile(&quot;/tmp/.tmpkMk3gm/in.txt&quot;, Modified))
+ ? ReadFile(&quot;/tmp/.tmpkMk3gm/in.txt&quot;, Modified)
+  ✓ /tmp/.tmpkMk3gm/in.txt
+ ✓ ReadFile(&quot;/tmp/.tmpkMk3gm/in.txt&quot;, Modified)
 ← Ok(String(&quot;hello world!&quot;))
 </code></pre>
 <p>In this second build, <code>ReadFile</code> is now no longer required, and instead is only checked.
 This is correct, and does not make any assertions fail.</p>
 <p>The third build now looks like:</p>
-<pre><code>→ ToLower(ReadFile(&quot;/tmp/.tmpbIbmoX/in.txt&quot;, Modified))
- ? ReadFile(&quot;/tmp/.tmpbIbmoX/in.txt&quot;, Modified)
-  ✗ /tmp/.tmpbIbmoX/in.txt (old: Modified(Some(SystemTime { tv_sec: 1699279014, tv_nsec: 305395416 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1699279014, tv_nsec: 309395442 })))
-  ▶ ReadFile(&quot;/tmp/.tmpbIbmoX/in.txt&quot;, Modified)
-   - /tmp/.tmpbIbmoX/in.txt
+<pre><code>→ ToLower(ReadFile(&quot;/tmp/.tmpkMk3gm/in.txt&quot;, Modified))
+ ? ReadFile(&quot;/tmp/.tmpkMk3gm/in.txt&quot;, Modified)
+  ✗ /tmp/.tmpkMk3gm/in.txt (old: Modified(Some(SystemTime { tv_sec: 1699284333, tv_nsec: 432902051 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1699284333, tv_nsec: 436902032 })))
+  ▶ ReadFile(&quot;/tmp/.tmpkMk3gm/in.txt&quot;, Modified)
+   - /tmp/.tmpkMk3gm/in.txt
   ◀ Ok(String(&quot;!DLROW OLLEH&quot;))
- ✗ ReadFile(&quot;/tmp/.tmpbIbmoX/in.txt&quot;, Modified) (old: Equals(Ok(String(&quot;HELLO WORLD!&quot;))) ≠ new: Equals(Ok(String(&quot;!DLROW OLLEH&quot;))))
- ▶ ToLower(ReadFile(&quot;/tmp/.tmpbIbmoX/in.txt&quot;, Modified))
-  → ReadFile(&quot;/tmp/.tmpbIbmoX/in.txt&quot;, Modified)
+ ✗ ReadFile(&quot;/tmp/.tmpkMk3gm/in.txt&quot;, Modified) (old: Equals(Ok(String(&quot;HELLO WORLD!&quot;))) ≠ new: Equals(Ok(String(&quot;!DLROW OLLEH&quot;))))
+ ▶ ToLower(ReadFile(&quot;/tmp/.tmpkMk3gm/in.txt&quot;, Modified))
+  → ReadFile(&quot;/tmp/.tmpkMk3gm/in.txt&quot;, Modified)
   ← Ok(String(&quot;!DLROW OLLEH&quot;))
  ◀ Ok(String(&quot;!dlrow olleh&quot;))
 ← Ok(String(&quot;!dlrow olleh&quot;))

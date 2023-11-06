@@ -1,15 +1,14 @@
 pibs
 ├── pie
 │   ├── Cargo.toml
-│   ├── src
-│   │   ├── fs.rs
-│   │   ├── context
-│   │   │   ├── non_incremental.rs
-│   │   │   └── mod.rs
-│   │   └── lib.rs
-│   ├── Cargo.lock
-│   └── target
-└── dev_shared
-    ├── Cargo.toml
-    └── src
-        └── lib.rs
+│   └── src
+│       ├── fs.rs
+│       ├── context
+│       │   ├── non_incremental.rs
+│       │   └── mod.rs
+│       └── lib.rs
+├── dev_shared
+│   ├── Cargo.toml
+│   └── src
+│       └── lib.rs
+└── Cargo.toml
