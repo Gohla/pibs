@@ -252,7 +252,7 @@ This subsection discusses them.
 For additional related work discussion, check the related work sections of <a href="https://gkonat.github.io/assets/dissertation/konat_dissertation.pdf#page=126" title="" target="_blank">chapter 7 (page 104)</a> and <a href="https://gkonat.github.io/assets/dissertation/konat_dissertation.pdf#page=148" title="" target="_blank">chapter 8 (page 126)</a> of my dissertation. </p>
 <h3 id="pluto"><a class="header" href="#pluto">Pluto</a></h3>
 <p>PIE is based on <a href="https://www.pl.informatik.uni-mainz.de/files/2019/04/pluto-incremental-build.pdf" title="" target="_blank">Pluto</a>, a programmatic incremental build system developed by Sebastian Erdweg et al.
-This is not a coincidence, as Sebastian Erdweg was my PhD promotor, and coauthored the “Scalable Incremental Building with Dynamic Task Dependencies” paper.</p>
+This is not a coincidence, as Sebastian Erdweg was my PhD promotor, and we developed and wrote the “Scalable Incremental Building with Dynamic Task Dependencies” paper together.</p>
 <p>The <a href="https://www.pl.informatik.uni-mainz.de/files/2019/04/pluto-incremental-build.pdf" title="" target="_blank">Pluto paper</a> provides a more formal proof of incrementality and correctness for the top-down build algorithm, which provides confidence that this algorithm works correctly, but also explains the intricate details of the algorithm very well.
 Note that Pluto uses “builder” instead of “task”.
 In fact, a Pluto builder is more like an incremental function that <em>does not carry its input</em>, whereas a PIE task is more like an incremental closure that includes its input.</p>
@@ -262,7 +262,7 @@ In PIE, the library handles this for you.
 The downside is that PIE requires a mapping from a <code>Task</code> (using its <code>Eq</code> and <code>Hash</code> impls) to its dependencies and output (which is what the <code>Store</code> does), and some modifications had to be done to the consistency checking routines.
 The upside is that tasks don’t have to manage these build unit files, and the central <code>Store</code> can efficiently manage the entire dependency graph.
 Especially this central dependency graph management is useful for the bottom-up build algorithm, as we can use <a href="http://www.doc.ic.ac.uk/~phjk/Publications/DynamicTopoSortAlg-JEA-07.pdf" title="" target="_blank">dynamic topological sort algorithms for directed acyclic graphs</a>.</p>
-<h3 id="other-incremental-build-systems-with-dynamic-dependencies"><a class="header" href="#other-incremental-build-systems-with-dynamic-dependencies">Other incremental build systems with dynamic dependencies</a></h3>
+<h3 id="other-incremental-build-systems-with-dynamic-dependencies"><a class="header" href="#other-incremental-build-systems-with-dynamic-dependencies">Other Incremental Build Systems with Dynamic Dependencies</a></h3>
 <p><a href="https://www.microsoft.com/en-us/research/uploads/prod/2018/03/build-systems.pdf" title="" target="_blank">Build Systems à la Carte</a> shows a systematic and executable framework (in Haskell) for developing and comparing build systems. It compares the impact of design decisions such as what persistent build information to store, the scheduler to use, static/dynamic dependencies, whether it is minimal, supports early cutoff, and whether it supports distributed (cloud) builds. 
 Even though the Haskell code might be a bit confusing if you’re not used to functional programming, it is a great paper that discusses many aspects of programmatic incremental build systems and how to implement them.</p>
 <h4 id="shake"><a class="header" href="#shake">Shake</a></h4>
@@ -272,9 +272,9 @@ Therefore, the output (provided) files of a build task need to be known up-front
 The upside of this approach is that build scripts are easier to read and write and easier to parallelize.
 However, the main downside is that it is not possible to express build tasks where the names of provided files are only known after executing the task.
 For example, compiling a Java class with inner classes results in a class file for every inner class with a name based on the outer and inner class, which is not known up-front.</p>
-<p>Implementation wise, Shake can do parallel builds whereas PIE cannot (at the time of writing).
+<p>Implementation wise, Shake supports explicit parallelism, whereas PIE cannot (at the time of writing).
 Parallel builds in PIE are tricky because two build tasks executing in parallel could require/provide (read/write) to the same file, which can result in data races.
-Shake avoids this issue by requiring provided files to be specified as targets up-front, speeding up builds through parallelism.
+Shake avoids this issue by requiring provided files to be specified as targets up-front, speeding up builds through explicit parallelism.
 In PIE, this might be solvable with a protocol where tasks first call a <code>Context</code> method to tell PIE about the files that will be provided, or the directory in which files will be provided, so PIE can limit parallelism on those files and directories.
 Tasks that do not know this up-front cannot be executed in parallel, but can still be executed normally.</p>
 <h4 id="rattle"><a class="header" href="#rattle">Rattle</a></h4>
@@ -288,6 +288,7 @@ There are no explicit dependencies between commands, but implicit dependencies a
 The control logic/manipulation around the commands is not incrementalized.
 Rattle build scripts can be explicitly parallelized, but Rattle also implicitly parallelizes builds by speculatively executing future commands.
 If speculation results in a hazard, such as a command reading a file and then a command writing to that file – equivalent to a hidden dependency in PIE – then the build is inconsistent and must be restarted without speculative parallelism.</p>
+<h5 id="core-difference"><a class="header" href="#core-difference">Core difference</a></h5>
 <p>The best way I can explain the core difference is that Rattle builds a <em>single build script</em> which is a <em>stream of commands</em> with <em>file dependencies</em>; whereas in PIE, every build task is in essence <em>its own build script</em> that <em>produces an output value</em>, with file dependencies but also <em>dependencies between build tasks</em>.
 Both models have merit!</p>
 <p>The primary advantage of the Rattle model is that existing build scripts, such as Make scripts or even just Bash scripts, can be easily converted to Rattle build scripts by converting the commands and control logic/manipulation into Rattle.
@@ -301,14 +302,51 @@ The library that Rattle uses, <a href="https://github.com/jacereda/fsatrace" tit
 Therefore, Rattle also (as mentioned in the paper, frustratingly) inherits the limitations of this library.</p>
 <p>Compared to Rattle, the primary advantages of programmatic incremental build systems (i.e., the PIE model) are: </p>
 <ul>
-<li>The entire build is incrementalized (using tasks as a boundary), not just commands.</li>
 <li>PIE can <em>rebuild a subset of the build script</em>, instead of only the entire build script.</li>
+<li>The entire build is incrementalized (using tasks as a boundary), not just commands.</li>
 <li>Tasks can return any value of the programming language, not just strings.</li>
 <li>Tasks are modular, and can be shared using the mechanism of the programming language.</li>
 </ul>
 <p>These properties are a necessity for use in interactive environments, such as a code editors, IDEs, or other using-facing interactive applications.
 Therefore, the PIE model is more suited towards incrementalization in interactive environment, but can still be used to do incremental batch builds.</p>
-<p>TODO: discuss parallelism, self-tracking, and cloud builds.</p>
+<h5 id="implicit-parallelism-speculative-execution"><a class="header" href="#implicit-parallelism-speculative-execution">Implicit Parallelism (Speculative Execution)</a></h5>
+<p>Rattle supports both implicit and explicit parallelization, whereas PIE does not at the time of writing.
+Explicit parallelism was already discussed in the Shake section.</p>
+<p>After a first build, Rattle knows which commands have been executed and can perform implicit parallelization by speculatively executing future commands.
+If a hazard occurs, the build is restarted without speculation (other recovery mechanisms are also mentioned in the paper), although the evaluation shows that this is rare, and even then the builds are still fast due to incrementality and explicit parallelism.</p>
+<p>After the initial build, PIE also has full knowledge of the build script.
+In fact, we know more about the build script due to tracking both the file dependencies <em>and the dependencies between tasks</em>.
+However, just like Rattle, PIE doesn’t know whether the tasks that were required last time, will be the tasks that are required this time.
+In principle, 0 tasks that were required last time can be required the next time.
+Therefore, if we would do speculative execution of future commands, we could run into similar hazard: hidden dependencies and overlapping provided files.</p>
+<p>However, I think that restarting the build without speculative execution, when a hazard is detected, is incorrect in PIE.
+This is because PIE keeps track of the entire dependency graph, including task output values, which would not be correct after a hazard.
+Restarting the build could then produce a different result, because PIE uses the previously created dependency graph for incrementality.
+In Rattle this is correct because it only keeps track of file dependencies of commands.</p>
+<p>So I am currently not sure if and how we could do implicit parallelism in PIE.</p>
+<h5 id="self-tracking"><a class="header" href="#self-tracking">Self-Tracking</a></h5>
+<p>Self-tracking is the ability of an incremental build system to correctly react to <em>changes in the build script</em>.
+If a part of the build script changes, that part should be re-executed.</p>
+<p>Rattle supports self-tracking without special support for it, because Rattle makes no assumption about the build script, and re-executes the build script every time (while skipping commands that have not been affected).
+Therefore, build script changes are handled automatically.</p>
+<p>PIE supports self-tracking by creating a dependency to the source code or binary file of a task.
+However, this requires support from the programming language to find the source or binary file corresponding to a task.
+In the Java implementation of PIE, we can use <a href="https://github.com/metaborg/spoofax-pie/blob/develop/lwb/metalang/stratego/stratego/src/main/java/mb/str/task/spoofax/StrategoParseWrapper.java" title="" target="_blank">class loaders to get the (binary) class files for tasks and related files</a>.
+In the <a href="https://github.com/Gohla/pie" title="" target="_blank">Rust implementation of PIE</a>, we have not yet implemented self-tracking.
+In Rust, we could implement self-tracking by writing a <a href="https://doc.rust-lang.org/beta/reference/procedural-macros.html" title="" target="_blank">procedural macro</a> that can be applied to <code>Task</code> implementations to embed a self-tracking dependency (probably a hash over the <code>Task</code> <code>impl</code>) into the <code>Task::execute</code> method.</p>
+<p>However, since PIE is fully programmatic, tasks can use arbitrary code.
+To be fully correct, we’d need to over-approximate: check whether the binary of the program has changed and consider all tasks inconsistent if the binary has changed.
+In practice, the approach from the Java implementation of PIE works well, alongside a version number that gets updated when code used by tasks changes semantics in a significant way.</p>
+<h5 id="cloud-builds"><a class="header" href="#cloud-builds">Cloud Builds</a></h5>
+<p>Rattle could support “cloud builds” where the output files of a command are stored on a server, using the hashed inputs (command string and read files) of the command as a key.
+Subsequent builds that run command with matching hashes could then just download the output files and put them in the right spot.
+It is unclear if Rattle actually does this, but they discuss it (and several problems in practice) in the paper.</p>
+<p>PIE does not currently support this, but could support it in a similar way (with the same practical problems).
+In essence, the <code>Store</code> as implemented in this tutorial is such a key-value store, except that it is locally stored.
+We also cache task outputs, but they could be stored in a similar way.</p>
+<p>Whether this is a good idea depends on the task.
+For tasks that are expensive to execute, querying a server and getting the data from the server can be faster than executing the task.
+For tasks that are cheap to execute, just executing it can be faster.</p>
 
                     </main>
 
