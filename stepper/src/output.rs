@@ -114,10 +114,12 @@ impl DirectoryStructure {
       Tree::new(label(path.as_ref().canonicalize()?)),
       |mut root, entry| {
         let dir = entry.metadata().unwrap();
-        if dir.is_dir() && !is_hidden(&entry.file_name()) {
-          root.push(Self::directory_tree(entry.path()).unwrap());
-        } else {
-          root.push(Tree::new(label(entry.path())));
+        if !is_hidden(entry.path().to_string_lossy().as_ref()) {
+          if dir.is_dir() {
+            root.push(Self::directory_tree(entry.path()).unwrap());
+          } else {
+            root.push(Tree::new(label(entry.path())));
+          }
         }
         root
       },
@@ -153,7 +155,7 @@ impl SourceArchive {
     let mut buffer = Vec::new();
     let source_directory = &applied.stepper.destination_root_directory;
     let walker = WalkDir::new(source_directory).into_iter();
-    for entry in walker.filter_entry(|e| !is_hidden(e.file_name())) {
+    for entry in walker.filter_entry(|e| !is_hidden(e.path().to_string_lossy().as_ref())) {
       let entry = entry?;
       let path = entry.path();
       let name = path.strip_prefix(source_directory)?.to_string_lossy();

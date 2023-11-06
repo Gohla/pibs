@@ -1,0 +1,8 @@
+[workspace]
+members = [
+  "pie",
+]
+default-members = [
+  "pie",
+]
+resolver = "2"

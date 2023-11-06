@@ -36,6 +36,9 @@ You can also see this as a kind of method overloading, without having to provide
 Now we need to implement this method for `NonIncrementalContext`.
 However, because we will be performing similar file system operations in the incremental context as well, we will create some utility functions for this first.
 
+
+## Filesystem utilities
+
 Add the `fs` module to `pie/src/lib.rs`:
 
 ```diff2html fromfile linebyline
@@ -62,20 +65,23 @@ Comments with three forward slashes `///` are [documentation comments](https://d
 ```
 
 We will write some tests to confirm the behaviour, but for that we need utilities to create temporary files and directories.
-Furthermore, we will be writing more unit tests, integration tests, and even benchmarks in this tutorial, so we will set up these utilities in such a way that they are reachable by all these use cases.
-The only way to do that in Rust right now, is to create a separate crate and have the `pie` crate depend on it.
+Furthermore, we will be writing more unit tests -- but also integration tests -- in this tutorial, so we will set up these utilities in such a way that they are reachable by both unit and integration tests.
+The only way to do that right now in Rust, is to create a separate package and have the `pie` package depend on it.
 
 And yes, we went from adding file dependencies, to creating file system utilities, to testing those file system utilities, to creating testing utilities, and now to making a crate for those testing utilities.
 Sorry about that 😅, we will start unwinding this stack soon!
 
-Next to the `pie` directory, create a directory named `dev_shared`.
+
+## Create the `dev_shared` package
+
+Next to the `pie` directory, create a directory named `dev_shared` (i.e., the `pibs/dev_shared` directory where `pibs` is your workspace directory).
 Create the `dev_shared/Cargo.toml` file with the following contents:
 
 ```toml,
 {{#include d_dev_shared_Cargo.toml}}
 ```
 
-We've added the `tempfile` dependency here already, which is a crate that creates and automatically cleans up temporary files and directories.
+We've added the `tempfile` dependency here already, which is a library that creates and automatically cleans up temporary files and directories.
 
 ```admonish tip title="Rust Help: Dependencies" collapsible=true
 We use other libraries (crates) by [specifying dependencies](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html).
@@ -88,10 +94,16 @@ Create the main library file `dev_shared/src/lib.rs`, with functions for creatin
 {{#include e_dev_shared_lib.rs}}
 ```
 
+Now add the `dev_shared` package to the members of the workspace in `Cargo.toml` (i.e., the `pibs/Cargo.toml` file where `pibs` is your workspace directory):
+
+```diff2html linebyline
+{{#include ../../gen/2_incrementality/1_require_file/e_Cargo_workspace.toml.diff}}
+```
+
 Your directory structure should now look like this:
 
 ```
-{{#include ../../gen/2_incrementality/1_require_file/e_dir.txt:2:}}
+{{#include ../../gen/2_incrementality/1_require_file/e_dir.txt}}
 ```
 
 To access these utility functions in the `pie` crate, add a dependency to `dev_shared` in `pie/Cargo.toml` along with another create that will help testing:
@@ -100,9 +112,14 @@ To access these utility functions in the `pie` crate, add a dependency to `dev_s
 ../../gen/2_incrementality/1_require_file/f_Cargo.toml.diff
 ```
 
-We've also added the [assert_matches](https://crates.io/crates/assert_matches) crate, which is a handy library for asserting that a value matches a pattern.
+We're using a [path dependency](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#specifying-path-dependencies) to have `pie` depend on the `dev_shared` package at `"../dev_shared"` in the workspace.
+
+We've also added a dependency to [assert_matches](https://crates.io/crates/assert_matches), which is a handy library for asserting that a value matches a pattern.
 Note that these dependencies are added under `dev-dependencies`, indicating that these dependencies are only available when running tests, benchmarks, and examples.
-Therefore, users of our library will not depend on these crates, which is good, because temporary file management and assertions are not necessary to users of the library.
+Therefore, users of our library will not depend on these libraries, which is good, because temporary file management and assertions are not necessary to users of the library.
+
+
+## Testing filesystem utilities
 
 Back to testing our filesystem utilities.
 Add the following tests to `pie/src/fs.rs`:
@@ -125,6 +142,9 @@ Tests can [return `Result`](https://doc.rust-lang.org/book/ch11-01-writing-tests
 When a test returns an `Err`, the test fails.
 This allows us to write more concise tests using error propagation.
 ```
+
+
+## Implement `require_file`
 
 Now we are done unwinding our stack and have filesystem and testing utilities.
 Make the non-incremental context compatible by changing `pie/src/context/non_incremental.rs`:
