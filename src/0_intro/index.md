@@ -117,12 +117,12 @@ However, the _idea_ of programmatic incremental build systems is not limited to 
 You can implement a programmatic incremental build systems in any general-purpose programming language, or adapt the idea to better fit your preferences and/or requirements.
 In fact, we first implemented [PIE in Java](https://github.com/metaborg/pie), with [PIE in Rust](https://github.com/Gohla/pie) being the second iteration, mostly simplifying internals to make it easier to explain.
 
-For a more thorough discussion of future, existing, and related work, see [the last chapter of this book](../4_next/index.md).
+For a more thorough discussion on PIE, see the [PIE Implementations & Publications appendix chapter](../a_appendix/1_pie.md), and the [Related Work appendix chapter](../a_appendix/2_related_work.md).
 
 ## Feedback & Contributing
 
-This tutorial is open source, hosted at <https://github.com/Gohla/pie>.
-If you find an error in the code or text of this tutorial, or want to report other kinds of problems, you can report it on the [issue tracker](https://github.com/Gohla/pie/issues).
+This tutorial is open source, hosted at <https://github.com/Gohla/pibs>.
+If you find an error in the code or text of this tutorial, or want to report other kinds of problems, you can report it on the [issue tracker](https://github.com/Gohla/pibs/issues).
 Small fixes can be sent as a pull request by pressing the edit button in the top-right corner.
 
 Let's continue with the tutorial.
