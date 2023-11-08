@@ -34,7 +34,9 @@ A programmatic incremental build system is a mix between an incremental build sy
 As a small teaser, here is a simplified version of a programmatic incremental toy build script that copies a text file by reading and writing:
 
 ```rust
-struct ReadFile { file: PathBuf }
+struct ReadFile {
+  file: PathBuf
+}
 impl Task for ReadFile {
   fn execute<C: Context>(&self, context: &mut C) -> Result<String, io::Error> {
     context.require_file(&self.file)?;
@@ -42,7 +44,10 @@ impl Task for ReadFile {
   }
 }
 
-struct WriteFile<T> { task: T, file: PathBuf }
+struct WriteFile<T> {
+  task: T,
+  file: PathBuf
+}
 impl<T: Task> Task for WriteFile<T> {
   fn execute<C: Context>(&self, context: &mut C) -> Result<(), io::Error> {
     let string: String = context.require_task(&self.task)?;
@@ -52,8 +57,13 @@ impl<T: Task> Task for WriteFile<T> {
 }
 
 fn main() {
-  let read_task = ReadFile { file: PathBuf::from("in.txt") };
-  let write_task = WriteFile { task: read_task, file: PathBuf::from("out.txt") };
+  let read_task = ReadFile {
+    file: PathBuf::from("in.txt")
+  };
+  let write_task = WriteFile { 
+    task: read_task,
+    file: PathBuf::from("out.txt")
+  };
   Pie::default().new_session().require(&write_task);
 }
 ```
