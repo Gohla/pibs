@@ -43,12 +43,11 @@ Or to interactively build, run:
 mdbook serve
 ```
 
-## Generate source code
+## Debugging and/or developing code in the tutorial
 
 To generate all source code into `dst`, run:
 
 ```shell
-cd stepper
 cargo run --bin stepper -- step-all -d dst --skip-cargo --skip-outputs
 ```
 
