@@ -196,7 +196,9 @@ However, if you like to learn through examples and experimentation, or already k
 </ul>
 <h4 id="teaser-toy-example"><a class="header" href="#teaser-toy-example">Teaser Toy Example</a></h4>
 <p>As a small teaser, here is a simplified version of a programmatic incremental toy build script that copies a text file by reading and writing:</p>
-<pre><code class="language-rust">struct ReadFile { file: PathBuf }
+<pre><code class="language-rust">struct ReadFile {
+  file: PathBuf
+}
 impl Task for ReadFile {
   fn execute&lt;C: Context&gt;(&amp;self, context: &amp;mut C) -&gt; Result&lt;String, io::Error&gt; {
     context.require_file(&amp;self.file)?;
@@ -204,7 +206,10 @@ impl Task for ReadFile {
   }
 }
 
-struct WriteFile&lt;T&gt; { task: T, file: PathBuf }
+struct WriteFile&lt;T&gt; {
+  task: T,
+  file: PathBuf
+}
 impl&lt;T: Task&gt; Task for WriteFile&lt;T&gt; {
   fn execute&lt;C: Context&gt;(&amp;self, context: &amp;mut C) -&gt; Result&lt;(), io::Error&gt; {
     let string: String = context.require_task(&amp;self.task)?;
@@ -214,8 +219,13 @@ impl&lt;T: Task&gt; Task for WriteFile&lt;T&gt; {
 }
 
 fn main() {
-  let read_task = ReadFile { file: PathBuf::from(&quot;in.txt&quot;) };
-  let write_task = WriteFile { task: read_task, file: PathBuf::from(&quot;out.txt&quot;) };
+  let read_task = ReadFile {
+    file: PathBuf::from(&quot;in.txt&quot;)
+  };
+  let write_task = WriteFile { 
+    task: read_task,
+    file: PathBuf::from(&quot;out.txt&quot;)
+  };
   Pie::default().new_session().require(&amp;write_task);
 }</code></pre>
 <p>The unit of computation in a programmatic incremental build system is a <em>task</em>.

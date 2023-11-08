@@ -1,5 +1,5 @@
-    Finished test [unoptimized + debuginfo] target(s) in 0.01s
-     Running tests/top_down.rs (target/debug/deps/top_down-becb1588a9ee205d)
+    Finished test [unoptimized + debuginfo] target(s) in 0.02s
+     Running tests/top_down.rs (target/debug/deps/top_down-83c1025f865c7b6b)
 
 running 1 test
 → Return("Hello, World!")
