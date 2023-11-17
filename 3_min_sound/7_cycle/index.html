@@ -357,7 +357,19 @@ As long as the reserved task dependency is updated to a real <code>RequireTask</
   document.addEventListener('DOMContentLoaded', function () {
     let diff = String.raw`--- pie/src/tracker/writing.rs
 +++ pie/src/tracker/writing.rs
-@@ -120,6 +120,7 @@
+@@ -28,11 +28,6 @@
+       indentation: 0,
+     }
+   }
+-
+-  /// Gets the writer of this writing tracker.
+-  pub fn writer(&self) -> &W { &self.writer }
+-  /// Gets the mutable writer of this writing tracker.
+-  pub fn writer_mut(&mut self) -> &mut W { &mut self.writer }
+ }
+ 
+ #[allow(dead_code)]
+@@ -125,6 +120,7 @@
            _ => {}, // Other variants cannot occur.
          }
        }

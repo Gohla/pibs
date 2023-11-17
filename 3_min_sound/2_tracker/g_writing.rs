@@ -28,4 +28,9 @@ impl<W: Write> WritingTracker<W> {
       indentation: 0,
     }
   }
+
+  /// Gets the writer of this writing tracker.
+  pub fn writer(&self) -> &W { &self.writer }
+  /// Gets the mutable writer of this writing tracker.
+  pub fn writer_mut(&mut self) -> &mut W { &mut self.writer }
 }

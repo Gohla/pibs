@@ -1,6 +1,6 @@
 --- pie/src/tracker/writing.rs
 +++ pie/src/tracker/writing.rs
-@@ -70,8 +70,11 @@
+@@ -75,8 +75,11 @@
    }
  
    fn require_file_end(&mut self, dependency: &FileDependency) {
@@ -13,7 +13,7 @@
    fn require_task_start(&mut self, task: &T, _stamper: &OutputStamper) {
      self.writeln(format_args!("→ {:?}", task));
      self.indent();
-@@ -99,7 +102,7 @@
+@@ -104,7 +107,7 @@
      inconsistency: Result<Option<&Inconsistency<T::Output>>, &io::Error>
    ) {
      match dependency {

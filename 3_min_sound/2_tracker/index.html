@@ -628,10 +628,16 @@ impl&lt;W: Write&gt; WritingTracker&lt;W&gt; {
       indentation: 0,
     }
   }
+
+  /// Gets the writer of this writing tracker.
+  pub fn writer(&amp;self) -&gt; &amp;W { &amp;self.writer }
+  /// Gets the mutable writer of this writing tracker.
+  pub fn writer_mut(&amp;mut self) -&gt; &amp;mut W { &amp;mut self.writer }
 }</code></pre>
-<p>The <code>WritingTracker</code> is generic over a writer <code>W</code> that must implement <code>Write</code>, which is a standard trait for writing bytes to something.
-<code>with_stdout</code> and <code>with_stderr</code> can be used to create buffered writers to standard output and standard error.
-<code>new</code> can be used to create a writer to anything that implements <code>Write</code>, such as a <code>File</code>.</p>
+<p>The <code>WritingTracker</code> is generic over a writer <code>W</code> that must implement <code>std::io::Write</code>, which is a standard trait for writing bytes to something.
+<code>with_stdout</code> and <code>with_stderr</code> are used to create buffered writers to standard output and standard error.
+<code>new</code> can be used to create a writer to anything that implements <code>Write</code>, such as a <code>File</code>.
+<code>writer</code> and <code>writer_mut</code> are for retrieving the underlying writer.</p>
 <p>Add some utility functions for <code>WritingTracker</code> to <code>pie/src/tracker/writing.rs</code>: </p>
 <pre><code class="language-rust ">#[allow(dead_code)]
 impl&lt;W: Write&gt; WritingTracker&lt;W&gt; {
@@ -838,52 +844,52 @@ Now run the example with <code>cargo run --example incremental</code>, and you s
     Finished dev [unoptimized + debuginfo] target(s) in 0.45s
      Running `target/debug/examples/incremental`
 A) New task: expect `read_task` to execute
-→ ReadStringFromFile(&quot;/tmp/.tmppBSL54/input.txt&quot;, Modified)
- ▶ ReadStringFromFile(&quot;/tmp/.tmppBSL54/input.txt&quot;, Modified)
-  - /tmp/.tmppBSL54/input.txt
+→ ReadStringFromFile(&quot;/tmp/.tmpZfmhH5/input.txt&quot;, Modified)
+ ▶ ReadStringFromFile(&quot;/tmp/.tmpZfmhH5/input.txt&quot;, Modified)
+  - /tmp/.tmpZfmhH5/input.txt
  ◀ Ok(&quot;Hi&quot;)
 ← Ok(&quot;Hi&quot;)
 🏁
 
 B) Reuse: expect no execution
-→ ReadStringFromFile(&quot;/tmp/.tmppBSL54/input.txt&quot;, Modified)
- ✓ /tmp/.tmppBSL54/input.txt
+→ ReadStringFromFile(&quot;/tmp/.tmpZfmhH5/input.txt&quot;, Modified)
+ ✓ /tmp/.tmpZfmhH5/input.txt
 ← Ok(&quot;Hi&quot;)
 🏁
 
 C) Inconsistent file dependency: expect `read_task` to execute
-→ ReadStringFromFile(&quot;/tmp/.tmppBSL54/input.txt&quot;, Modified)
- ✗ /tmp/.tmppBSL54/input.txt (old: Modified(Some(SystemTime { tv_sec: 1699450987, tv_nsec: 202535181 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1699450987, tv_nsec: 206535180 })))
- ▶ ReadStringFromFile(&quot;/tmp/.tmppBSL54/input.txt&quot;, Modified)
-  - /tmp/.tmppBSL54/input.txt
+→ ReadStringFromFile(&quot;/tmp/.tmpZfmhH5/input.txt&quot;, Modified)
+ ✗ /tmp/.tmpZfmhH5/input.txt (old: Modified(Some(SystemTime { tv_sec: 1700225590, tv_nsec: 665200990 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1700225590, tv_nsec: 669200985 })))
+ ▶ ReadStringFromFile(&quot;/tmp/.tmpZfmhH5/input.txt&quot;, Modified)
+  - /tmp/.tmpZfmhH5/input.txt
  ◀ Ok(&quot;Hello&quot;)
 ← Ok(&quot;Hello&quot;)
 🏁
 
 D) Different tasks: expect `read_task_b_modified` and `read_task_b_exists` to execute
-→ ReadStringFromFile(&quot;/tmp/.tmppBSL54/input_b.txt&quot;, Modified)
- ▶ ReadStringFromFile(&quot;/tmp/.tmppBSL54/input_b.txt&quot;, Modified)
-  - /tmp/.tmppBSL54/input_b.txt
+→ ReadStringFromFile(&quot;/tmp/.tmpZfmhH5/input_b.txt&quot;, Modified)
+ ▶ ReadStringFromFile(&quot;/tmp/.tmpZfmhH5/input_b.txt&quot;, Modified)
+  - /tmp/.tmpZfmhH5/input_b.txt
  ◀ Ok(&quot;Test&quot;)
 ← Ok(&quot;Test&quot;)
 🏁
-→ ReadStringFromFile(&quot;/tmp/.tmppBSL54/input_b.txt&quot;, Exists)
- ▶ ReadStringFromFile(&quot;/tmp/.tmppBSL54/input_b.txt&quot;, Exists)
-  - /tmp/.tmppBSL54/input_b.txt
+→ ReadStringFromFile(&quot;/tmp/.tmpZfmhH5/input_b.txt&quot;, Exists)
+ ▶ ReadStringFromFile(&quot;/tmp/.tmpZfmhH5/input_b.txt&quot;, Exists)
+  - /tmp/.tmpZfmhH5/input_b.txt
  ◀ Ok(&quot;Test&quot;)
 ← Ok(&quot;Test&quot;)
 🏁
 
 E) Different stampers: expect only `read_task_b_modified` to execute
-→ ReadStringFromFile(&quot;/tmp/.tmppBSL54/input_b.txt&quot;, Modified)
- ✗ /tmp/.tmppBSL54/input_b.txt (old: Modified(Some(SystemTime { tv_sec: 1699450987, tv_nsec: 206535180 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1699450987, tv_nsec: 210535180 })))
- ▶ ReadStringFromFile(&quot;/tmp/.tmppBSL54/input_b.txt&quot;, Modified)
-  - /tmp/.tmppBSL54/input_b.txt
+→ ReadStringFromFile(&quot;/tmp/.tmpZfmhH5/input_b.txt&quot;, Modified)
+ ✗ /tmp/.tmpZfmhH5/input_b.txt (old: Modified(Some(SystemTime { tv_sec: 1700225590, tv_nsec: 669200985 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1700225590, tv_nsec: 673200980 })))
+ ▶ ReadStringFromFile(&quot;/tmp/.tmpZfmhH5/input_b.txt&quot;, Modified)
+  - /tmp/.tmpZfmhH5/input_b.txt
  ◀ Ok(&quot;Test Test&quot;)
 ← Ok(&quot;Test Test&quot;)
 🏁
-→ ReadStringFromFile(&quot;/tmp/.tmppBSL54/input_b.txt&quot;, Exists)
- ✓ /tmp/.tmppBSL54/input_b.txt
+→ ReadStringFromFile(&quot;/tmp/.tmpZfmhH5/input_b.txt&quot;, Exists)
+ ✓ /tmp/.tmpZfmhH5/input_b.txt
 ← Ok(&quot;Test&quot;)
 🏁
 </code></pre>
