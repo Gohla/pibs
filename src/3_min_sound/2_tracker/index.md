@@ -141,9 +141,10 @@ Then create the `pie/src/tracker/writing.rs` file and add:
 {{#include g_writing.rs}}
 ```
 
-The `WritingTracker` is generic over a writer `W` that must implement `Write`, which is a standard trait for writing bytes to something.
-`with_stdout` and `with_stderr` can be used to create buffered writers to standard output and standard error.
+The `WritingTracker` is generic over a writer `W` that must implement `std::io::Write`, which is a standard trait for writing bytes to something.
+`with_stdout` and `with_stderr` are used to create buffered writers to standard output and standard error.
 `new` can be used to create a writer to anything that implements `Write`, such as a `File`.
+`writer` and `writer_mut` are for retrieving the underlying writer.
 
 Add some utility functions for `WritingTracker` to `pie/src/tracker/writing.rs`: 
 
