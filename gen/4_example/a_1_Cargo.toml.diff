@@ -1,0 +1,9 @@
+--- pie/Cargo.toml
++++ pie/Cargo.toml
+@@ -9,3 +9,6 @@
+ [dev-dependencies]
+ dev_shared = { path = "../dev_shared" }
+ assert_matches = "1"
++pest = "2"
++pest_meta = "2"
++pest_vm = "2"

@@ -1,0 +1,7 @@
+--- pie/Cargo.toml
++++ pie/Cargo.toml
+@@ -12,3 +12,4 @@
+ pest = "2"
+ pest_meta = "2"
+ pest_vm = "2"
++clap = { version = "4", features = ["derive"] }

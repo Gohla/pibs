@@ -1,0 +1,8 @@
+--- pie/examples/parser_dev/main.rs
++++ pie/examples/parser_dev/main.rs
+@@ -1,4 +1,5 @@
+ pub mod parse;
++pub mod task;
+ 
+ fn main() {
+ 

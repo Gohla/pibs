@@ -1,0 +1,5 @@
+num = { ASCII_DIGIT+ }
+
+main = { SOI ~ num ~ EOI }
+
+WHITESPACE = _{ " " | "\t" | "\n" | "\r" }
