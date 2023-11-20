@@ -1,0 +1,14 @@
+[package]
+name = "pie"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+pie_graph = "0.0.1"
+
+[dev-dependencies]
+dev_shared = { path = "../dev_shared" }
+assert_matches = "1"
+pest = "2"
+pest_meta = "2"
+pest_vm = "2"
