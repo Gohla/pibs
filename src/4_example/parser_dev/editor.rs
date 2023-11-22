@@ -1,6 +1,6 @@
-use std::fmt::Write as FmtWrite;
+use std::fmt::Write as _;
 use std::fs::{File, read_to_string};
-use std::io::{self, Cursor, Write};
+use std::io::{self, Cursor, Write as _};
 use std::path::PathBuf;
 
 use crossterm::event::{DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind, KeyModifiers};
@@ -40,7 +40,7 @@ impl Editor {
     }
 
     let mut editor = Self { pie, buffers, active_buffer: 0, rule_name: args.rule_name, };
-    editor.save_and_update_buffers();
+    editor.save_and_update_buffers(false);
     Ok(editor)
   }
 
@@ -53,9 +53,9 @@ impl Editor {
     let mut terminal = Terminal::new(backend)?;
     terminal.clear()?;
 
-    // Draw in a loop until a quit is requested or an error occurs.
+    // Draw and process events in a loop until a quit is requested or an error occurs.
     let result = loop {
-      match self.draw(&mut terminal) {
+      match self.draw_and_process_event(&mut terminal) {
         Ok(false) => break Ok(()), // Quit requested
         Err(e) => break Err(e), // Error
         _ => {},
@@ -70,7 +70,7 @@ impl Editor {
     result
   }
 
-  fn draw<B: Backend>(&mut self, terminal: &mut Terminal<B>) -> Result<bool, io::Error> {
+  fn draw_and_process_event<B: Backend>(&mut self, terminal: &mut Terminal<B>) -> Result<bool, io::Error> {
     terminal.draw(|frame| {
       let root_areas = Layout::default()
         .direction(Direction::Vertical)
@@ -112,41 +112,44 @@ impl Editor {
       };
 
       // Draw status line on the last line (`root_areas[2]`).
-      let status = Paragraph::new("Live Parser Development. Press Esc to quit, ^X to switch active \
-                                            buffer, ^S to save modified buffers and test changes, ^U to undo.");
+      let status = Paragraph::new("Live Parser Development. Press Esc to quit, ^T to switch active \
+                                            buffer, ^S to save modified buffers and test changes.");
       frame.render_widget(status, root_areas[2]);
     })?;
 
     match crossterm::event::read()? {
       Event::Key(key) if key.kind == KeyEventKind::Release => return Ok(true), // Skip releases.
       Event::Key(key) if key.code == KeyCode::Esc => return Ok(false),
-      Event::Key(key) if key.code == KeyCode::Char('x') && key.modifiers.contains(KeyModifiers::CONTROL) => {
+      Event::Key(key) if key.code == KeyCode::Char('t') && key.modifiers.contains(KeyModifiers::CONTROL) => {
         self.active_buffer = (self.active_buffer + 1) % self.buffers.len();
       }
       Event::Key(key) if key.code == KeyCode::Char('s') && key.modifiers.contains(KeyModifiers::CONTROL) => {
-        self.save_and_update_buffers();
+        self.save_and_update_buffers(true);
       },
-      event => self.buffers[self.active_buffer].process_event(event), // Forward to current buffer.
+      event => self.buffers[self.active_buffer].process_event(event), // Otherwise: forward to current buffer.
     };
 
     Ok(true)
   }
 
-  fn save_and_update_buffers(&mut self) {
+  fn save_and_update_buffers(&mut self, save: bool) {
     for buffer in &mut self.buffers {
       buffer.status_mut().clear();
     }
 
-    for buffer in &mut self.buffers {
-      if let Err(error) = buffer.save_if_modified() {
-        let _ = write!(buffer.status_mut(), "Saving file failed: {}", error);
+    if save {
+      for buffer in &mut self.buffers {
+        if let Err(error) = buffer.save_if_modified() {
+          // Ignore error: writing to String cannot fail.
+          let _ = write!(buffer.status_mut(), "Saving file failed: {}", error);
+        }
       }
     }
 
     let mut session = self.pie.new_session();
 
     let grammar_buffer = &mut self.buffers[0];
-    let compile_grammar_task = Tasks::CompileGrammar(grammar_buffer.path().clone());
+    let compile_grammar_task = Tasks::compile_grammar(grammar_buffer.path());
     match session.require(&compile_grammar_task) {
       Err(error) => {
         let _ = write!(grammar_buffer.status_mut(), "{}", error);
@@ -157,7 +160,8 @@ impl Editor {
 
     let compile_grammar_task = Box::new(compile_grammar_task);
     for buffer in &mut self.buffers[1..] {
-      match session.require(&Tasks::Parse(compile_grammar_task.clone(), buffer.path().clone(), self.rule_name.clone())) {
+      let task = Tasks::parse(&compile_grammar_task, buffer.path(), &self.rule_name);
+      match session.require(&task) {
         Err(error) => { let _ = write!(buffer.status_mut(), "{}", error); },
         Ok(Outputs::Parsed(Some(output))) => { let _ = write!(buffer.status_mut(), "Parsing succeeded: {}", output); },
         _ => {}
