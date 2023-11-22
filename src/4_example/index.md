@@ -267,7 +267,7 @@ We will put the editor in a separate module, and start out with the basic scaffo
 Add `editor` as a public module to `pie/examples/parser_dev/main.rs`:
 
 ```diff2html linebyline
-{{#include ../gen/4_example/d_2_main_editor.rs.diff}}
+{{#include ../gen/4_example/d_2_main_editor_mod.rs.diff}}
 ```
 
 Create the `pie/examples/parser_dev/editor.rs` file and add the following to it:
@@ -312,13 +312,69 @@ Press escape to exit out of the application.
 If the program ever panics, your terminal will be left in a bad state.
 In that case, you'll have to reset your terminal back to a good state, or restart your terminal.
 
-### Text Editing
+### Text Editor `Buffer`
 
-[//]: # ()
-[//]: # (run)
+The goal of this application is to develop a grammar alongside example programs of that grammar, getting feedback whether the grammar is correct, but also getting feedback whether the example programs can be parsed with the grammar.
+Therefore, we will need to draw multiple text editors along with space for feedback, and be able to swap between active editors.
+This will be the responsibility of the `Buffer` struct which we will create in a separate module.
+Add the `buffer` module to `pie/examples/parser_dev/editor.rs`:
 
-[//]: # ()
-[//]: # (`Buffer`)
+```diff2html
+{{#include ../gen/4_example/e_1_editor_buffer_mod.rs.diff}}
+```
 
-[//]: # ()
-[//]: # (create buffers in `new`)
+Then create the `pie/examples/parser_dev/editor/buffer.rs` file and add to it:
+
+```rust,
+{{#include e_2_buffer.rs}}
+```
+
+A `Buffer` is a text editor for a text file at a certain `path`.
+It keeps track of a text editor with `TextArea<'static>`, `feedback` text, and whether the text was `modified` in relation to the file.
+`new` creates a `Buffer` and is fallible due to reading a file.
+
+The `draw` method draws/renders the buffer (using the Ratatui `frame`) into `area`, with `active` signifying that this buffer is active and should be highlighted differently.
+The first part sets the style of the editor, mainly highlighting an active editor by using `Color::Gray` as the block style.
+Default styles indicate that no additional styling is done, basically inheriting the style from a parent widget (i.e., a block), or using the style from your terminal.
+The second part creates a [block](https://ratatui.rs/how-to/widgets/block.html) that renders a border around the text editor and renders a title on the upper border.
+The third part splits up the available space into space for the text editor (80%), and space for the feedback text (at least 7 lines), and renders the text editor and feedback text into those spaces.
+The layout can of course be tweaked, but it works for this example.
+
+`process_event` lets the text editor process input events, and updates whether the text has been modified.
+`save_if_modified` saves the text to file, but only if modified.
+`path` gets the file path of the buffer.
+`feedback_mut` returns a mutable borrow to the feedback text, enabling modification of the feedback text.
+
+It is up to the user of `Buffer` to keep track of the active buffer, sending `active: true` to the `draw` method of that buffer, and calling `process_event` on the active buffer.
+That's exactly what we're going to implement next.
+
+### Drawing and Updating `Buffer`s
+
+We'll create `Buffers` in `Editor` and keep track of the active buffer.
+Modify `pie/examples/parser_dev/editor.rs`:
+       
+```diff2html
+{{#include ../gen/4_example/e_3_editor_buffers.rs.diff}}
+```
+
+`Editor` now has a list of `buffers` via `Vec<Buffer>` and keeps track of the active tracker via `active_buffer` which is an index into `buffers`.
+In `new`, we create buffers based on the grammar and program file paths in `args`.
+The buffers `Vec` is created in such a way that the first buffer is always the grammar buffer, with the rest being example program buffers.
+The grammar buffer always exists because `args.grammar_file_path` is mandatory, but there can be 0 or more example program buffers.
+
+`draw_and_process_event` now splits up the available space.
+First vertically: as much space as possible is reserved for buffers, with at least 1 line being reserved for a help line at the bottom.
+Then horizontally: half of the horizontal space is reserved for a grammar buffer, and the other half for program buffers.
+The vertical space for program buffers (`program_buffer_areas`) is further divided: evenly split between all program buffers.
+
+Then, the buffers are drawn in the corresponding spaces with `active` only being `true` if we are drawing the active buffer, based on the `active_buffer` index.  
+
+In the event processing code, we match the Control+T shortcut and increase the `active_buffer` index.
+We wrap back to 0 when the `active_buffer` index would overflow using a modulo (%) operator, ensuring that `active_buffer` is always a correct index into the `buffers` `Vec`.
+Finally, if none of the other shortcuts match, we send the event to the active buffer.
+
+Try out the code again with `cargo run --example parser_dev -- test.pest main test_1.test test_2.test -e` in a terminal.
+This should open up the application with a grammar buffer on the left, and two program buffers on the right.
+Use Control+T to swap between buffers, and escape to exit.
+
+### Saving `Buffer`s and Providing Feedback

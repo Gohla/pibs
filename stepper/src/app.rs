@@ -443,9 +443,15 @@ pub fn step_all(
 
     stepper.apply([
       create_diff_from_destination_file("d_1_Cargo.toml", "pie/Cargo.toml"),
-      create_diff_from_destination_file("d_2_main_editor.rs", "pie/examples/parser_dev/main.rs"),
+      create_diff_from_destination_file("d_2_main_editor_mod.rs", "pie/examples/parser_dev/main.rs"),
       add("d_3_editor.rs", "pie/examples/parser_dev/editor.rs"),
       create_diff_from_destination_file("d_4_main_cli.rs", "pie/examples/parser_dev/main.rs"),
+    ]);
+
+    stepper.apply([
+      create_diff_from_destination_file("e_1_editor_buffer_mod.rs", "pie/examples/parser_dev/editor.rs"),
+      add("e_2_buffer.rs", "pie/examples/parser_dev/editor/buffer.rs"),
+      create_diff_from_destination_file("e_3_editor_buffers.rs", "pie/examples/parser_dev/editor.rs"),
     ]);
   });
 }
