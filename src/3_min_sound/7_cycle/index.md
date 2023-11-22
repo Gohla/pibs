@@ -154,5 +154,4 @@ We will not do that in this tutorial, but feel free to solve those issues (and w
 You can [download the source files up to this point](../../gen/3_min_sound/7_cycle/source.zip).
 ```
 
-This is currently the end of the guided programming tutorial.
-In the appendix chapters, we discuss PIE implementations and publications, related work, and future work.
+In the next chapter, we will implement a "parser development" application using PIE, which can do batch builds but also provides an interactive parser development environment, using a single set of tasks.

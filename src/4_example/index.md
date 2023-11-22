@@ -219,38 +219,22 @@ And create `test_2.txt` with:
 Run the program with `cargo run --example parser_dev -- grammar.pest main test_1.txt test_2.txt`.
 This should result in a build log showing that the grammar is successfully compiled, that one file is successfully parsed, and that one file has a parse error.
 
+Unfortunately, there is no incrementality between different runs of the example, because the `Pie` `Store` is not persisted.
+The `Store` only exists in-memory while the program is running, and is then thrown away.
+Thus, there cannot be any incrementality.
+To get incrementality, we need to serialize the `Store` before the program exits, and deserialize it when the program starts.
+This is possible and not actually that hard, I just never got around to explaining it in this tutorial.
+See the [Side Note: Serialization](#side-note-serialization) section at the end for info on how this can be implemented.
+
 ```admonish tip title="Hiding the Build Log"
 If you are using a bash-like shell on a UNIX-like OS, you can hide the build log by redirecting stderr to `/dev/null` with: `cargo run --example parser_dev -- grammar.pest main test_1.txt test_2.txt 2>/dev/null`.
 Otherwise, you can hide the build log by replacing `WritingTracker::with_stderr()` with `NoopTracker`.
-```
-
-```admonish note title="No Incrementality?" collapsible=true
-Unfortunately, there is no incrementality between different runs of the example, because the `Store` is not persisted.
-The `Store` only exists in-memory while the program is running, and is then thrown away.
-Thus, there cannot be any incrementality.
-
-To get incrementality, we need to serialize the `Store` before the program exits, and deserialize it when the program starts.
-This is possible and not actually that hard, I just never got around to implementing it in this tutorial.
-If you want some pointers to implement serialization for your PIE implementation, read on.
-
-The de-facto standard (and awesome) serialization library in Rust in [serde](https://serde.rs/).
-See the [PIE in Rust repository at the `pre_type_refactor` tag](https://github.com/Gohla/pie/blob/pre_type_refactor/pie/) for a version of PIE with serde serialization.
-For example, the [`Store`](https://github.com/Gohla/pie/blob/pre_type_refactor/pie/src/store.rs#L14-L17) struct has annotations for deriving `serde::Deserialize` and `serde::Serialize`.
-These attributes are somewhat convoluted due to serialization being optional, and due to the `H` generic type parameter which should not be included into serialization bounds.
-
-You should derive `serde::Deserialize` and `serde::Serialize` for all required types in the PIE library, but also all tasks, and all task outputs.
-The `pie_graph` library support serialization when the `serde` feature is enabled, which is enabled by default.
-Then, see [this serialization integration test](https://github.com/Gohla/pie/blob/pre_type_refactor/pie/tests/serde.rs).
 ```
 
 Feel free to experiment a bit with the grammar, example files, etc. before continuing.
 We will develop an interactive editor next however, which will make experimentation easier!
 
 ## Interactive Parser Development
-
-```admonish warning title="Under Construction"
-This subsection is under construction.
-```
 
 Now we'll create an interactive version of this grammar compilation and parsing pipeline, using [Ratatui](https://ratatui.rs/) to create a terminal GUI.
 Since we need to edit text files, we'll use [tui-textarea](https://github.com/rhysd/tui-textarea), which is a text editor widget for Ratatui.
@@ -351,6 +335,9 @@ That's exactly what we're going to implement next.
 ### Drawing and Updating `Buffer`s
 
 We'll create `Buffers` in `Editor` and keep track of the active buffer.
+To keep this example simple, we'll create buffers only for the grammar file and example program files given as command-line arguments.
+If you want more or less example files, you'll have to exit the application, add those example files to the command-line arguments, and then start the application again.
+ 
 Modify `pie/examples/parser_dev/editor.rs`:
        
 ```diff2html
@@ -370,7 +357,7 @@ The vertical space for program buffers (`program_buffer_areas`) is further divid
 Then, the buffers are drawn in the corresponding spaces with `active` only being `true` if we are drawing the active buffer, based on the `active_buffer` index.  
 
 In the event processing code, we match the Control+T shortcut and increase the `active_buffer` index.
-We wrap back to 0 when the `active_buffer` index would overflow using a modulo (%) operator, ensuring that `active_buffer` is always a correct index into the `buffers` `Vec`.
+We wrap back to 0 when the `active_buffer` index would overflow, using a modulo (%) operator, ensuring that `active_buffer` is always a correct index into the `buffers` `Vec`.
 Finally, if none of the other shortcuts match, we send the event to the active buffer.
 
 Try out the code again with `cargo run --example parser_dev -- test.pest main test_1.test test_2.test -e` in a terminal.
@@ -378,3 +365,95 @@ This should open up the application with a grammar buffer on the left, and two p
 Use Control+T to swap between buffers, and escape to exit.
 
 ### Saving `Buffer`s and Providing Feedback
+
+Next up is saving the buffers, running the compile grammar and parse tasks, and show feedback from those tasks in the feedback space of buffers.
+Modify `pie/examples/parser_dev/editor.rs`:
+       
+```diff2html
+{{#include ../gen/4_example/f_editor_update.rs.diff}}
+```
+
+The biggest addition as at the bottom: the `save_and_update_buffers` method.
+This method first clears the feedback text for all buffers, and saves all buffers (if `save` is `true`).
+Then we create a new PIE session and require the compile grammar task and parse tasks, similar to `compile_grammar_and_parse` in the main file.
+Here we instead `writeln!` the results to the feedback text of buffers.
+
+We store the `rule_name` in `Editor` as that is needed to create parse tasks, and store a `Pie` instance so that we can create new PIE sessions to require tasks.
+
+When the Control+S shortcut is pressed, we call `save_and_update_buffers` with `save` set to `true`.
+We also call `save_and_update_buffers` in `Editor::new` to provide feedback when the application starts out, but with `save` set to false, so we don't immediately save all files.
+Finally, we update the help line to include the Control+S shortcut.
+
+Try out the code again with `cargo run --example parser_dev -- test.pest main test_1.test test_2.test -e` in a terminal.
+Now you should be able to make changes to the grammar and/or example programs, press Control+S to save modified files, and get feedback on grammar compilation and parsing example programs.
+If you like, you can go through the [pest parser book](https://pest.rs/book/) and experiment with/develop a parser.
+
+### Showing the Build Log
+
+We'll add one more feature to the editor: showing the build log.
+We can do this by writing the build log to an in-memory text buffer, and by drawing that text buffer.
+Modify `pie/examples/parser_dev/editor.rs`:
+       
+```diff2html
+{{#include ../gen/4_example/g_editor_build_log.rs.diff}}
+```
+
+In `new` we now create the `Pie` instance with a writing tracker: `WritingTracker::new(Cursor::new(Vec::new()))`.
+This writing tracker writes to a [`Cursor`](https://doc.rust-lang.org/std/io/struct.Cursor.html), specifically `Cursor<Vec<u8>>` for which [`Write` is implemented](https://doc.rust-lang.org/src/std/io/cursor.rs.html#570-591).
+We modify the type of the `pie` field to include the tracker type to reflect this: `WritingTracker<Cursor<Vec<u8>>>`.
+Build logs will then be written to the `Vec<u8>` inside the `Cursor`.
+
+To draw the build log in between the buffers and help line, we first modify the layout split into `root_areas`: buffers now take up 70% of vertical space, and add a new constraint for the build log which takes 30% of vertical space.
+
+We access the in-memory buffer via `&self.pie.tracker().writer().get_ref()`, convert this to a string via [`String::from_utf8_lossy`](https://doc.rust-lang.org/std/string/struct.String.html#method.from_utf8_lossy), and convert that to [Ratatui `Text`](https://docs.rs/ratatui/latest/ratatui/text/struct.Text.html) which can be passed to [`Paragraph::new`](https://docs.rs/ratatui/latest/ratatui/widgets/struct.Paragraph.html#method.new) and also gives us line information for scrolling the build log.
+The scroll calculation is explained in the comments.
+We then draw the build log as a `Paragraph`.
+
+Finally, we update the area for the help line from `root_areas[1]` to `root_areas[2]`, as adding the layout constraint shifted the index up.
+
+Try out the code again with `cargo run --example parser_dev -- test.pest main test_1.test test_2.test -e` in a terminal.
+Pressing Control+S causes tasks to be required, which is shown in the build log.
+Try modifying a single file to see what tasks PIE executes, or what the effect of an error in the grammar has.
+
+And with that, we're done with the interactive parser development example 🎉🎉🎉!
+
+## Conclusion
+
+In this example, we developed tasks for compiling a grammar and parsing files with that grammar, and then used those tasks to implement both a batch build, and an interactive parser development environment.
+
+In the introduction, we [motivated](../0_intro/index.md#motivation) programmatic incremental build systems with the key properties of: programmatic, incremental, correct, automatic, and multipurpose.
+Did these properties help with the implementation of this example application?
+
+- Programmatic: due to the build script -- that is: the compile grammar and parse tasks -- being written in the same programming language as the application, it was extremely simple to integrate. We also didn't have to learn a separate language, we could just apply our knowledge of Rust!
+- Incremental: PIE incrementalized the build for us, so we didn't have to implement incrementality.
+  - The batch build is unfortunately not incremental due to not having implemented serialization in this tutorial, but this is not a fundamental limitation. See [Side Note: Serialization](#side-note-serialization) for info on how to solve this.
+- Correct: PIE ensures the build is correct, so we don't have to worry about glitches or inconsistent data.
+  - For a real application, we should write tests to increase the confidence that our build is correct, because PIE checks for correctness at runtime.
+- Automatic: we didn't manually implement incrementality, but only specified the dependencies: from compile grammar/parse task to a file, and from parse tasks to compile grammar tasks. This saves development time that would be spent on incrementalization and making sure that it is correct. For larger applications, this can end up saving a lot of development time.
+- Multipurpose: we reused the same tasks for both a batch build and for use in an interactive environment, without any modifications. Again, this saves development time.
+
+So yes, I think programmatic incremental build systems, and in particular PIE, help a lot when developing these kind of applications.
+In larger applications, the benefits can be even larger, due to saving more development time.
+
+You should of course decide for yourself whether PIE really helped with implementing this example.
+Every problem is different, and requires separate considerations as to what tools are the best for solving that particular problem.
+
+This is currently the end of the guided programming tutorial.
+In the appendix chapters, we discuss PIE implementations and publications, related work, and future work.
+
+```admonish example title="Download source code" collapsible=true
+You can [download the source files up to this point](../../gen/4_example/source.zip).
+```
+
+## Side Note: Serialization
+
+To get incrementality between different runs (i.e., processes) of the program, we need to serialize the `Store` before the program exits, and deserialize the `Store` when the program starts.
+
+The de-facto standard (and awesome) serialization library in Rust in [serde](https://serde.rs/).
+See the [PIE in Rust repository at the `pre_type_refactor` tag](https://github.com/Gohla/pie/blob/pre_type_refactor/pie/) for a version of PIE with serde serialization.
+For example, the [`Store`](https://github.com/Gohla/pie/blob/pre_type_refactor/pie/src/store.rs#L14-L17) struct has annotations for deriving `serde::Deserialize` and `serde::Serialize`.
+These attributes are somewhat convoluted due to serialization being optional, and due to the `H` generic type parameter which should not be included into serialization bounds.
+
+You should derive `serde::Deserialize` and `serde::Serialize` for all required types in the PIE library, but also all tasks, and all task outputs.
+The `pie_graph` library support serialization when the `serde` feature is enabled, which is enabled by default.
+Then, see [this serialization integration test](https://github.com/Gohla/pie/blob/pre_type_refactor/pie/tests/serde.rs).

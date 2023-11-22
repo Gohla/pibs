@@ -453,5 +453,15 @@ pub fn step_all(
       add("e_2_buffer.rs", "pie/examples/parser_dev/editor/buffer.rs"),
       create_diff_from_destination_file("e_3_editor_buffers.rs", "pie/examples/parser_dev/editor.rs"),
     ]);
+
+    stepper.apply([
+      create_diff_from_destination_file("f_editor_update.rs", "pie/examples/parser_dev/editor.rs"),
+    ]);
+
+    stepper.apply([
+      create_diff_from_destination_file("g_editor_build_log.rs", "pie/examples/parser_dev/editor.rs"),
+    ]).output(
+      SourceArchive::new("source.zip")
+    );
   });
 }
