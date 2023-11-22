@@ -16,14 +16,14 @@ pub mod editor;
 
 #[derive(Parser)]
 struct Cli {
-  #[command(flatten)]
-  args: Args,
-  /// Start a live parser development editor.
+  /// Start an interactive parser development editor.
   #[arg(short, long)]
   edit: bool,
+  #[command(flatten)]
+  args: Args,
 }
 
-#[derive(clap::Args)]
+#[derive(Parser)]
 pub struct Args {
   /// Path to the pest grammar file.
   grammar_file_path: PathBuf,

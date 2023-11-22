@@ -2,6 +2,7 @@ use std::fmt::Write;
 use std::path::PathBuf;
 
 use clap::Parser;
+
 use pie::Pie;
 use pie::tracker::writing::WritingTracker;
 
@@ -17,7 +18,7 @@ pub struct Args {
   /// Rule name (from the pest grammar file) used to parse program files.
   rule_name: String,
   /// Paths to program files to parse with the pest grammar.
-  program_file_paths: Vec<PathBuf>
+  program_file_paths: Vec<PathBuf>,
 }
 
 fn main() {

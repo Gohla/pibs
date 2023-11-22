@@ -574,7 +574,7 @@ Modify <code>pie/examples/parser_dev/main.rs</code>:</p>
 +  /// Rule name (from the pest grammar file) used to parse program files.
 +  rule_name: String,
 +  /// Paths to program files to parse with the pest grammar.
-+  program_file_paths: Vec<PathBuf>
++  program_file_paths: Vec<PathBuf>,
 +}
 +
  fn main() {
@@ -614,19 +614,21 @@ Modify <code>pie/examples/parser_dev/main.rs</code>:</p>
   document.addEventListener('DOMContentLoaded', function () {
     let diff = String.raw`--- pie/examples/parser_dev/main.rs
 +++ pie/examples/parser_dev/main.rs
-@@ -1,6 +1,11 @@
+@@ -1,7 +1,13 @@
 +use std::fmt::Write;
  use std::path::PathBuf;
  
  use clap::Parser;
+ 
 +use pie::Pie;
 +use pie::tracker::writing::WritingTracker;
 +
 +use crate::task::{Outputs, Tasks};
- 
++
  pub mod parse;
  pub mod task;
-@@ -17,4 +22,30 @@
+ 
+@@ -17,4 +23,30 @@
  
  fn main() {
    let args = Args::parse();
@@ -740,8 +742,9 @@ The <code>pie_graph</code> library support serialization when the <code>serde</c
 Then, see <a href="https://github.com/Gohla/pie/blob/pre_type_refactor/pie/tests/serde.rs" title="" target="_blank">this serialization integration test</a>.</p>
 </div>
 </details>
-<p>Feel free to experiment with the grammar, example files, etc. before continuing!</p>
-<h2 id="editor"><a class="header" href="#editor">Editor</a></h2>
+<p>Feel free to experiment a bit with the grammar, example files, etc. before continuing.
+We will develop an interactive editor next however, which will make experimentation easier!</p>
+<h2 id="interactive-parser-development"><a class="header" href="#interactive-parser-development">Interactive Parser Development</a></h2>
 <div id="admonition-under-construction" class="admonition admonish-warning">
 <div class="admonition-title">
 <p>Under Construction</p>
@@ -751,6 +754,225 @@ Then, see <a href="https://github.com/Gohla/pie/blob/pre_type_refactor/pie/tests
 <p>This subsection is under construction.</p>
 </div>
 </div>
+<p>Now we’ll create an interactive version of this grammar compilation and parsing pipeline, using <a href="https://ratatui.rs/" title="" target="_blank">Ratatui</a> to create a terminal GUI.
+Since we need to edit text files, we’ll use <a href="https://github.com/rhysd/tui-textarea" title="" target="_blank">tui-textarea</a>, which is a text editor widget for Ratatui.
+Ratatui works with multiple <a href="https://ratatui.rs/concepts/backends/" title="" target="_blank">backends</a>, with <a href="https://crates.io/crates/crossterm" title="" target="_blank">crossterm</a> being the default backend since it is cross-platform.
+Add these libraries as a dependency to <code>pie/Cargo.toml</code>:</p>
+<div class="diff2html" id="diff2html_7"></div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    let diff = String.raw`--- pie/Cargo.toml
++++ pie/Cargo.toml
+@@ -13,3 +13,6 @@
+ pest_meta = "2"
+ pest_vm = "2"
+ clap = { version = "4", features = ["derive"] }
++ratatui = "0.24"
++tui-textarea = "0.4"
++crossterm = "0.27"
+`;
+    let target = document.getElementById('diff2html_7');
+    let configuration = {
+      drawFileList: false,
+      fileListToggle: false,
+      fileContentToggle: false,
+
+      outputFormat: 'line-by-line',
+      matching: 'lines',
+    };
+    let diff2htmlUi = new Diff2HtmlUI(target, diff, configuration, hljs);
+    diff2htmlUi.draw();
+  });
+</script>
+<h3 id="ratatui-scaffolding"><a class="header" href="#ratatui-scaffolding">Ratatui Scaffolding</a></h3>
+<p>We will put the editor in a separate module, and start out with the basic scaffolding of a Ratatui “Hello World” application.
+Add <code>editor</code> as a public module to <code>pie/examples/parser_dev/main.rs</code>:</p>
+<div class="diff2html" id="diff2html_8"></div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    let diff = String.raw`--- pie/examples/parser_dev/main.rs
++++ pie/examples/parser_dev/main.rs
+@@ -10,6 +10,7 @@
+ 
+ pub mod parse;
+ pub mod task;
++pub mod editor;
+ 
+ #[derive(Parser)]
+ pub struct Args {
+`;
+    let target = document.getElementById('diff2html_8');
+    let configuration = {
+      drawFileList: false,
+      fileListToggle: false,
+      fileContentToggle: false,
+
+      outputFormat: 'line-by-line',
+      matching: 'lines',
+    };
+    let diff2htmlUi = new Diff2HtmlUI(target, diff, configuration, hljs);
+    diff2htmlUi.draw();
+  });
+</script>
+<p>Create the <code>pie/examples/parser_dev/editor.rs</code> file and add the following to it:</p>
+<pre><code class="language-rust ">use std::io;
+
+use crossterm::event::{DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind};
+use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
+use ratatui::backend::{Backend, CrosstermBackend};
+use ratatui::Terminal;
+use ratatui::widgets::Paragraph;
+
+use crate::Args;
+
+/// Live parser development editor.
+pub struct Editor {}
+
+impl Editor {
+  /// Create a new editor from `args`.
+  pub fn new(_args: Args) -&gt; Result&lt;Self, io::Error&gt; {
+    Ok(Self {})
+  }
+
+  /// Run the editor, drawing it into an alternate screen of the terminal.
+  pub fn run(&amp;mut self) -&gt; Result&lt;(), io::Error&gt; {
+    // Setup terminal for GUI rendering.
+    enable_raw_mode()?;
+    let mut backend = CrosstermBackend::new(io::stdout());
+    crossterm::execute!(backend, EnterAlternateScreen, EnableMouseCapture)?;
+    let mut terminal = Terminal::new(backend)?;
+    terminal.clear()?;
+
+    // Draw and process events in a loop until a quit is requested or an error occurs.
+    let result = loop {
+      match self.draw_and_process_event(&amp;mut terminal) {
+        Ok(false) =&gt; break Ok(()), // Quit requested
+        Err(e) =&gt; break Err(e), // Error
+        _ =&gt; {},
+      }
+    };
+
+    // First undo our changes to the terminal.
+    disable_raw_mode()?;
+    crossterm::execute!(terminal.backend_mut(), LeaveAlternateScreen, DisableMouseCapture)?;
+    terminal.show_cursor()?;
+    // Then present the result to the user.
+    result
+  }
+
+  fn draw_and_process_event&lt;B: Backend&gt;(&amp;mut self, terminal: &amp;mut Terminal&lt;B&gt;) -&gt; Result&lt;bool, io::Error&gt; {
+    terminal.draw(|frame| {
+      frame.render_widget(Paragraph::new(&quot;Hello World! Press Esc to exit.&quot;), frame.size());
+    })?;
+
+    match crossterm::event::read()? {
+      Event::Key(key) if key.kind == KeyEventKind::Release =&gt; return Ok(true), // Skip releases.
+      Event::Key(key) if key.code == KeyCode::Esc =&gt; return Ok(false),
+      _ =&gt; {}
+    };
+
+    Ok(true)
+  }
+}</code></pre>
+<p>The <code>Editor</code> struct will hold the state of the editor application, which is currently empty, but we’ll add fields to it later.
+Likewise, the <code>new</code> function doesn’t do a lot right now, but it is scaffolding for when we add state.
+It returns a <code>Result</code> because it can fail in the future.</p>
+<p>The <code>run</code> method sets up the terminal for GUI rendering, draws the GUI and processes events in a loop until stopped, and then undoes our changes to the terminal.
+It is set up in such a way that undoing our changes to the terminal happens regardless if there is an error or not (although panics would still skip that code and leave the terminal in a bad state).
+This is a <a href="https://ratatui.rs/tutorial/hello-world/index.html" title="" target="_blank">standard program loop for Ratatui</a>.</p>
+<details id="admonition-rust-help-returning-from-loops" class="admonition admonish-tip">
+<summary class="admonition-title">
+<p>Rust Help: Returning From Loops</p>
+<p><a class="admonition-anchor-link" href="#admonition-rust-help-returning-from-loops"></a></p>
+</summary>
+<div>
+<p>A <a href="https://doc.rust-lang.org/book/ch03-05-control-flow.html#repeating-code-with-loop" title="" target="_blank">
+<code>loop</code> indicates an infinite loop</a>.
+You can <a href="https://doc.rust-lang.org/book/ch03-05-control-flow.html#returning-values-from-loops" title="" target="_blank">return a value from such loops with <code>break</code></a>.</p>
+</div>
+</details>
+<p>The <code>draw_and_process_event</code> method first draws the GUI, currently just a hello world message, and then processes events such as key presses.
+Currently, this skips key releases because we are only interested in presses, and returns <code>Ok(false)</code> if escape is pressed, causing the <code>loop</code> to be <code>break</code>ed out.</p>
+<p>Now we need to go back to our command-line argument parsing and add a flag indicating that we want to start up an interactive editor.
+Modify <code>pie/examples/parser_dev/main.rs</code>:</p>
+<div class="diff2html" id="diff2html_9"></div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    let diff = String.raw`--- pie/examples/parser_dev/main.rs
++++ pie/examples/parser_dev/main.rs
+@@ -1,4 +1,5 @@
+ use std::fmt::Write;
++use std::io;
+ use std::path::PathBuf;
+ 
+ use clap::Parser;
+@@ -6,6 +7,7 @@
+ use pie::Pie;
+ use pie::tracker::writing::WritingTracker;
+ 
++use crate::editor::Editor;
+ use crate::task::{Outputs, Tasks};
+ 
+ pub mod parse;
+@@ -13,6 +15,15 @@
+ pub mod editor;
+ 
+ #[derive(Parser)]
++struct Cli {
++  /// Start an interactive parser development editor.
++  #[arg(short, long)]
++  edit: bool,
++  #[command(flatten)]
++  args: Args,
++}
++
++#[derive(Parser)]
+ pub struct Args {
+   /// Path to the pest grammar file.
+   grammar_file_path: PathBuf,
+@@ -22,9 +33,15 @@
+   program_file_paths: Vec<PathBuf>,
+ }
+ 
+-fn main() {
+-  let args = Args::parse();
+-  compile_grammar_and_parse(args);
++fn main() -> Result<(), io::Error> {
++  let cli = Cli::parse();
++  if cli.edit {
++    let mut editor = Editor::new(cli.args)?;
++    editor.run()
++  } else {
++    compile_grammar_and_parse(cli.args);
++    Ok(())
++  }
+ }
+ 
+ fn compile_grammar_and_parse(args: Args) {
+`;
+    let target = document.getElementById('diff2html_9');
+    let configuration = {
+      drawFileList: false,
+      fileListToggle: false,
+      fileContentToggle: false,
+
+      outputFormat: 'side-by-side',
+      matching: 'lines',
+    };
+    let diff2htmlUi = new Diff2HtmlUI(target, diff, configuration, hljs);
+    diff2htmlUi.draw();
+  });
+</script>
+<p>We add a new <code>Cli</code> struct with an <code>edit</code> field that is settable by a short (<code>-e</code>) or long (<code>--edit</code>) flag, and flatten <code>Args</code> into it.
+Using this new <code>Cli</code> struct here keeps <code>Args</code> clean, since the existing code does not need to know about the <code>edit</code> flag.
+Instead of using a flag, you could also define a <a href="https://docs.rs/clap/latest/clap/_derive/_tutorial/chapter_0/index.html" title="" target="_blank">separate command</a> for editing.</p>
+<p>In <code>main</code>, we parse <code>Cli</code> instead, check whether <code>cli.edit</code> is set, and create and run the editor if it is.
+Otherwise, we do a batch build.</p>
+<p>Try out the code with <code>cargo run --example parser_dev -- test.pest main test_1.test test_2.test -e</code> in a terminal, which should open up a separate screen with a hello world text.
+Press escape to exit out of the application.</p>
+<p>If the program ever panics, your terminal will be left in a bad state.
+In that case, you’ll have to reset your terminal back to a good state, or restart your terminal.</p>
+<h3 id="text-editing"><a class="header" href="#text-editing">Text Editing</a></h3>
 
                     </main>
 

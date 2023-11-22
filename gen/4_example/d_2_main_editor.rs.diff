@@ -1,0 +1,10 @@
+--- pie/examples/parser_dev/main.rs
++++ pie/examples/parser_dev/main.rs
+@@ -10,6 +10,7 @@
+ 
+ pub mod parse;
+ pub mod task;
++pub mod editor;
+ 
+ #[derive(Parser)]
+ pub struct Args {

@@ -1,18 +1,20 @@
 --- pie/examples/parser_dev/main.rs
 +++ pie/examples/parser_dev/main.rs
-@@ -1,6 +1,11 @@
+@@ -1,7 +1,13 @@
 +use std::fmt::Write;
  use std::path::PathBuf;
  
  use clap::Parser;
+ 
 +use pie::Pie;
 +use pie::tracker::writing::WritingTracker;
 +
 +use crate::task::{Outputs, Tasks};
- 
++
  pub mod parse;
  pub mod task;
-@@ -17,4 +22,30 @@
+ 
+@@ -17,4 +23,30 @@
  
  fn main() {
    let args = Args::parse();
