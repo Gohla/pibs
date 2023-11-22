@@ -710,6 +710,12 @@ The <code>_</code> operator before <code>{</code> indicates that it is a <a href
 </code></pre>
 <p>Run the program with <code>cargo run --example parser_dev -- grammar.pest main test_1.txt test_2.txt</code>.
 This should result in a build log showing that the grammar is successfully compiled, that one file is successfully parsed, and that one file has a parse error.</p>
+<p>Unfortunately, there is no incrementality between different runs of the example, because the <code>Pie</code> <code>Store</code> is not persisted.
+The <code>Store</code> only exists in-memory while the program is running, and is then thrown away.
+Thus, there cannot be any incrementality.
+To get incrementality, we need to serialize the <code>Store</code> before the program exits, and deserialize it when the program starts.
+This is possible and not actually that hard, I just never got around to explaining it in this tutorial.
+See the <a href="#side-note-serialization">Side Note: Serialization</a> section at the end for info on how this can be implemented.</p>
 <div id="admonition-hiding-the-build-log" class="admonition admonish-tip">
 <div class="admonition-title">
 <p>Hiding the Build Log</p>
@@ -720,40 +726,9 @@ This should result in a build log showing that the grammar is successfully compi
 Otherwise, you can hide the build log by replacing <code>WritingTracker::with_stderr()</code> with <code>NoopTracker</code>.</p>
 </div>
 </div>
-<details id="admonition-no-incrementality" class="admonition admonish-note">
-<summary class="admonition-title">
-<p>No Incrementality?</p>
-<p><a class="admonition-anchor-link" href="#admonition-no-incrementality"></a></p>
-</summary>
-<div>
-<p>Unfortunately, there is no incrementality between different runs of the example, because the <code>Store</code> is not persisted.
-The <code>Store</code> only exists in-memory while the program is running, and is then thrown away.
-Thus, there cannot be any incrementality.</p>
-<p>To get incrementality, we need to serialize the <code>Store</code> before the program exits, and deserialize it when the program starts.
-This is possible and not actually that hard, I just never got around to implementing it in this tutorial.
-If you want some pointers to implement serialization for your PIE implementation, read on.</p>
-<p>The de-facto standard (and awesome) serialization library in Rust in <a href="https://serde.rs/" title="" target="_blank">serde</a>.
-See the <a href="https://github.com/Gohla/pie/blob/pre_type_refactor/pie/" title="" target="_blank">PIE in Rust repository at the <code>pre_type_refactor</code> tag</a> for a version of PIE with serde serialization.
-For example, the <a href="https://github.com/Gohla/pie/blob/pre_type_refactor/pie/src/store.rs#L14-L17" title="" target="_blank">
-<code>Store</code></a> struct has annotations for deriving <code>serde::Deserialize</code> and <code>serde::Serialize</code>.
-These attributes are somewhat convoluted due to serialization being optional, and due to the <code>H</code> generic type parameter which should not be included into serialization bounds.</p>
-<p>You should derive <code>serde::Deserialize</code> and <code>serde::Serialize</code> for all required types in the PIE library, but also all tasks, and all task outputs.
-The <code>pie_graph</code> library support serialization when the <code>serde</code> feature is enabled, which is enabled by default.
-Then, see <a href="https://github.com/Gohla/pie/blob/pre_type_refactor/pie/tests/serde.rs" title="" target="_blank">this serialization integration test</a>.</p>
-</div>
-</details>
 <p>Feel free to experiment a bit with the grammar, example files, etc. before continuing.
 We will develop an interactive editor next however, which will make experimentation easier!</p>
 <h2 id="interactive-parser-development"><a class="header" href="#interactive-parser-development">Interactive Parser Development</a></h2>
-<div id="admonition-under-construction" class="admonition admonish-warning">
-<div class="admonition-title">
-<p>Under Construction</p>
-<p><a class="admonition-anchor-link" href="#admonition-under-construction"></a></p>
-</div>
-<div>
-<p>This subsection is under construction.</p>
-</div>
-</div>
 <p>Now we’ll create an interactive version of this grammar compilation and parsing pipeline, using <a href="https://ratatui.rs/" title="" target="_blank">Ratatui</a> to create a terminal GUI.
 Since we need to edit text files, we’ll use <a href="https://github.com/rhysd/tui-textarea" title="" target="_blank">tui-textarea</a>, which is a text editor widget for Ratatui.
 Ratatui works with multiple <a href="https://ratatui.rs/concepts/backends/" title="" target="_blank">backends</a>, with <a href="https://crates.io/crates/crossterm" title="" target="_blank">crossterm</a> being the default backend since it is cross-platform.
@@ -1128,7 +1103,9 @@ The layout can of course be tweaked, but it works for this example.</p>
 That’s exactly what we’re going to implement next.</p>
 <h3 id="drawing-and-updating-buffers"><a class="header" href="#drawing-and-updating-buffers">Drawing and Updating <code>Buffer</code>s</a></h3>
 <p>We’ll create <code>Buffers</code> in <code>Editor</code> and keep track of the active buffer.
-Modify <code>pie/examples/parser_dev/editor.rs</code>:</p>
+To keep this example simple, we’ll create buffers only for the grammar file and example program files given as command-line arguments.
+If you want more or less example files, you’ll have to exit the application, add those example files to the command-line arguments, and then start the application again.</p>
+<p>Modify <code>pie/examples/parser_dev/editor.rs</code>:</p>
 <div class="diff2html" id="diff2html_11"></div>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
@@ -1177,7 +1154,7 @@ Modify <code>pie/examples/parser_dev/editor.rs</code>:</p>
    }
  
    /// Run the editor, drawing it into an alternate screen of the terminal.
-@@ -47,13 +63,43 @@
+@@ -47,13 +63,42 @@
  
    fn draw_and_process_event<B: Backend>(&mut self, terminal: &mut Terminal<B>) -> Result<bool, io::Error> {
      terminal.draw(|frame| {
@@ -1194,21 +1171,20 @@ Modify <code>pie/examples/parser_dev/editor.rs</code>:</p>
 +      // Draw grammar buffer on the left (${"`"}buffer_areas[0]${"`"}).
 +      self.buffers[0].draw(frame, buffer_areas[0], self.active_buffer == 0);
 +
-+      { // Draw example program buffers on the right (${"`"}buffer_areas[1]${"`"}).
-+        let num_program_buffers = self.buffers.len() - 1;
-+        // Split vertical space between example program buffers.
-+        let program_buffer_areas = Layout::default()
-+          .direction(Direction::Vertical)
-+          .constraints(vec![Constraint::Ratio(1, num_program_buffers as u32); num_program_buffers])
-+          .split(buffer_areas[1]);
-+        for ((buffer, area), i) in self.buffers[1..].iter_mut().zip(program_buffer_areas.iter()).zip(1..) {
-+          buffer.draw(frame, *area, self.active_buffer == i);
-+        }
++      // Draw example program buffers on the right (${"`"}buffer_areas[1]${"`"}).
++      let num_program_buffers = self.buffers.len() - 1;
++      // Split vertical space between example program buffers.
++      let program_buffer_areas = Layout::default()
++        .direction(Direction::Vertical)
++        .constraints(vec![Constraint::Ratio(1, num_program_buffers as u32); num_program_buffers])
++        .split(buffer_areas[1]);
++      for ((buffer, area), i) in self.buffers[1..].iter_mut().zip(program_buffer_areas.iter()).zip(1..) {
++        buffer.draw(frame, *area, self.active_buffer == i);
 +      }
 +
 +      // Draw help line on the last line (${"`"}root_areas[1]${"`"}).
-+      let help = Paragraph::new("Interactive Parser Development. Press Esc to quit, ^T to switch active \
-+                                            buffer.");
++      let help = Paragraph::new("Interactive Parser Development. Press Esc to quit, ^T to switch the active \
++                                 buffer.");
 +      frame.render_widget(help, root_areas[1]);
      })?;
  
@@ -1247,12 +1223,300 @@ Then horizontally: half of the horizontal space is reserved for a grammar buffer
 The vertical space for program buffers (<code>program_buffer_areas</code>) is further divided: evenly split between all program buffers.</p>
 <p>Then, the buffers are drawn in the corresponding spaces with <code>active</code> only being <code>true</code> if we are drawing the active buffer, based on the <code>active_buffer</code> index.</p>
 <p>In the event processing code, we match the Control+T shortcut and increase the <code>active_buffer</code> index.
-We wrap back to 0 when the <code>active_buffer</code> index would overflow using a modulo (%) operator, ensuring that <code>active_buffer</code> is always a correct index into the <code>buffers</code> <code>Vec</code>.
+We wrap back to 0 when the <code>active_buffer</code> index would overflow, using a modulo (%) operator, ensuring that <code>active_buffer</code> is always a correct index into the <code>buffers</code> <code>Vec</code>.
 Finally, if none of the other shortcuts match, we send the event to the active buffer.</p>
 <p>Try out the code again with <code>cargo run --example parser_dev -- test.pest main test_1.test test_2.test -e</code> in a terminal.
 This should open up the application with a grammar buffer on the left, and two program buffers on the right.
 Use Control+T to swap between buffers, and escape to exit.</p>
 <h3 id="saving-buffers-and-providing-feedback"><a class="header" href="#saving-buffers-and-providing-feedback">Saving <code>Buffer</code>s and Providing Feedback</a></h3>
+<p>Next up is saving the buffers, running the compile grammar and parse tasks, and show feedback from those tasks in the feedback space of buffers.
+Modify <code>pie/examples/parser_dev/editor.rs</code>:</p>
+<div class="diff2html" id="diff2html_12"></div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    let diff = String.raw`--- pie/examples/parser_dev/editor.rs
++++ pie/examples/parser_dev/editor.rs
+@@ -1,3 +1,4 @@
++use std::fmt::Write;
+ use std::io;
+ 
+ use crossterm::event::{DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind, KeyModifiers};
+@@ -7,8 +8,11 @@
+ use ratatui::Terminal;
+ use ratatui::widgets::Paragraph;
+ 
++use pie::Pie;
++
+ use crate::Args;
+ use crate::editor::buffer::Buffer;
++use crate::task::{Outputs, Tasks};
+ 
+ mod buffer;
+ 
+@@ -16,6 +20,8 @@
+ pub struct Editor {
+   buffers: Vec<Buffer>,
+   active_buffer: usize,
++  rule_name: String,
++  pie: Pie<Tasks, Result<Outputs, String>>,
+ }
+ 
+ impl Editor {
+@@ -31,7 +37,9 @@
+       buffers.push(Buffer::new(path)?); // Subsequent buffers are always example program buffers.
+     }
+ 
+-    let editor = Self { buffers, active_buffer: 0, };
++    let pie = Pie::default();
++    let mut editor = Self { buffers, active_buffer: 0, rule_name: args.rule_name, pie };
++    editor.save_and_update_buffers(false);
+     Ok(editor)
+   }
+ 
+@@ -88,7 +96,7 @@
+ 
+       // Draw help line on the last line (${"`"}root_areas[1]${"`"}).
+       let help = Paragraph::new("Interactive Parser Development. Press Esc to quit, ^T to switch the active \
+-                                 buffer.");
++                                 buffer, ^S to save all buffers and provide feedback.");
+       frame.render_widget(help, root_areas[1]);
+     })?;
+ 
+@@ -98,9 +106,50 @@
+       Event::Key(key) if key.code == KeyCode::Char('t') && key.modifiers.contains(KeyModifiers::CONTROL) => {
+         self.active_buffer = (self.active_buffer + 1) % self.buffers.len();
+       }
++      Event::Key(key) if key.code == KeyCode::Char('s') && key.modifiers.contains(KeyModifiers::CONTROL) => {
++        self.save_and_update_buffers(true);
++      },
+       event => self.buffers[self.active_buffer].process_event(event), // Otherwise: forward to current buffer.
+     };
+ 
+     Ok(true)
+   }
++
++  fn save_and_update_buffers(&mut self, save: bool) {
++    for buffer in &mut self.buffers {
++      buffer.feedback_mut().clear();
++    }
++
++    if save {
++      for buffer in &mut self.buffers {
++        if let Err(error) = buffer.save_if_modified() {
++          // Ignore error: writing to String cannot fail.
++          let _ = writeln!(buffer.feedback_mut(), "Saving file failed: {}", error);
++        }
++      }
++    }
++
++    let mut session = self.pie.new_session();
++
++    let grammar_buffer = &mut self.buffers[0];
++    let compile_grammar_task = Tasks::compile_grammar(grammar_buffer.path());
++    match session.require(&compile_grammar_task) {
++      Err(error) => {
++        let _ = writeln!(grammar_buffer.feedback_mut(), "{}", error);
++        return; // Skip parsing if compiling grammar failed.
++      }
++      _ => {}
++    }
++
++    let compile_grammar_task = Box::new(compile_grammar_task);
++    for buffer in &mut self.buffers[1..] {
++      let task = Tasks::parse(&compile_grammar_task, buffer.path(), &self.rule_name);
++      let feedback = buffer.feedback_mut();
++      match session.require(&task) {
++        Err(error) => { let _ = writeln!(feedback, "{}", error); },
++        Ok(Outputs::Parsed(Some(output))) => { let _ = writeln!(feedback, "Parsing succeeded: {}", output); },
++        _ => {}
++      }
++    }
++  }
+ }
+`;
+    let target = document.getElementById('diff2html_12');
+    let configuration = {
+      drawFileList: false,
+      fileListToggle: false,
+      fileContentToggle: false,
+
+      outputFormat: 'side-by-side',
+      matching: 'lines',
+    };
+    let diff2htmlUi = new Diff2HtmlUI(target, diff, configuration, hljs);
+    diff2htmlUi.draw();
+  });
+</script>
+<p>The biggest addition as at the bottom: the <code>save_and_update_buffers</code> method.
+This method first clears the feedback text for all buffers, and saves all buffers (if <code>save</code> is <code>true</code>).
+Then we create a new PIE session and require the compile grammar task and parse tasks, similar to <code>compile_grammar_and_parse</code> in the main file.
+Here we instead <code>writeln!</code> the results to the feedback text of buffers.</p>
+<p>We store the <code>rule_name</code> in <code>Editor</code> as that is needed to create parse tasks, and store a <code>Pie</code> instance so that we can create new PIE sessions to require tasks.</p>
+<p>When the Control+S shortcut is pressed, we call <code>save_and_update_buffers</code> with <code>save</code> set to <code>true</code>.
+We also call <code>save_and_update_buffers</code> in <code>Editor::new</code> to provide feedback when the application starts out, but with <code>save</code> set to false, so we don’t immediately save all files.
+Finally, we update the help line to include the Control+S shortcut.</p>
+<p>Try out the code again with <code>cargo run --example parser_dev -- test.pest main test_1.test test_2.test -e</code> in a terminal.
+Now you should be able to make changes to the grammar and/or example programs, press Control+S to save modified files, and get feedback on grammar compilation and parsing example programs.
+If you like, you can go through the <a href="https://pest.rs/book/" title="" target="_blank">pest parser book</a> and experiment with/develop a parser.</p>
+<h3 id="showing-the-build-log"><a class="header" href="#showing-the-build-log">Showing the Build Log</a></h3>
+<p>We’ll add one more feature to the editor: showing the build log.
+We can do this by writing the build log to an in-memory text buffer, and by drawing that text buffer.
+Modify <code>pie/examples/parser_dev/editor.rs</code>:</p>
+<div class="diff2html" id="diff2html_13"></div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    let diff = String.raw`--- pie/examples/parser_dev/editor.rs
++++ pie/examples/parser_dev/editor.rs
+@@ -1,14 +1,17 @@
+ use std::fmt::Write;
+ use std::io;
++use std::io::Cursor;
+ 
+ use crossterm::event::{DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind, KeyModifiers};
+ use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
+ use ratatui::backend::{Backend, CrosstermBackend};
+ use ratatui::layout::{Constraint, Direction, Layout};
+ use ratatui::Terminal;
+-use ratatui::widgets::Paragraph;
++use ratatui::text::Text;
++use ratatui::widgets::{Block, Borders, Paragraph};
+ 
+ use pie::Pie;
++use pie::tracker::writing::WritingTracker;
+ 
+ use crate::Args;
+ use crate::editor::buffer::Buffer;
+@@ -21,7 +24,7 @@
+   buffers: Vec<Buffer>,
+   active_buffer: usize,
+   rule_name: String,
+-  pie: Pie<Tasks, Result<Outputs, String>>,
++  pie: Pie<Tasks, Result<Outputs, String>, WritingTracker<Cursor<Vec<u8>>>>,
+ }
+ 
+ impl Editor {
+@@ -37,7 +40,7 @@
+       buffers.push(Buffer::new(path)?); // Subsequent buffers are always example program buffers.
+     }
+ 
+-    let pie = Pie::default();
++    let pie = Pie::with_tracker(WritingTracker::new(Cursor::new(Vec::new())));
+     let mut editor = Self { buffers, active_buffer: 0, rule_name: args.rule_name, pie };
+     editor.save_and_update_buffers(false);
+     Ok(editor)
+@@ -73,7 +76,7 @@
+     terminal.draw(|frame| {
+       let root_areas = Layout::default()
+         .direction(Direction::Vertical)
+-        .constraints(vec![Constraint::Percentage(100), Constraint::Min(1)])
++        .constraints(vec![Constraint::Percentage(70), Constraint::Percentage(30), Constraint::Min(1)])
+         .split(frame.size());
+       let buffer_areas = Layout::default()
+         .direction(Direction::Horizontal)
+@@ -94,10 +97,26 @@
+         buffer.draw(frame, *area, self.active_buffer == i);
+       }
+ 
+-      // Draw help line on the last line (${"`"}root_areas[1]${"`"}).
++      { // Draw build log on the bottom (${"`"}root_areas[1]${"`"}).
++        let text = Text::raw(String::from_utf8_lossy(&self.pie.tracker().writer().get_ref()));
++
++        // Scroll down to last line, but that hides the entire build log.
++        let scroll = text.height() as u16;
++        // Scroll up the height of the build log area, making it visible. Use saturating sub to prevent overflows.
++        let scroll = scroll.saturating_sub(root_areas[1].height);
++        // Scroll down 2 lines due to the top and bottom border taking up 2 lines.
++        let scroll = scroll + 2;
++
++        let build_log = Paragraph::new(text)
++          .block(Block::default().title("Build log").borders(Borders::ALL))
++          .scroll((scroll, 0));
++        frame.render_widget(build_log, root_areas[1]);
++      };
++
++      // Draw help line on the last line (${"`"}root_areas[2]${"`"}).
+       let help = Paragraph::new("Interactive Parser Development. Press Esc to quit, ^T to switch the active \
+                                  buffer, ^S to save all buffers and provide feedback.");
+-      frame.render_widget(help, root_areas[1]);
++      frame.render_widget(help, root_areas[2]);
+     })?;
+ 
+     match crossterm::event::read()? {
+`;
+    let target = document.getElementById('diff2html_13');
+    let configuration = {
+      drawFileList: false,
+      fileListToggle: false,
+      fileContentToggle: false,
+
+      outputFormat: 'side-by-side',
+      matching: 'lines',
+    };
+    let diff2htmlUi = new Diff2HtmlUI(target, diff, configuration, hljs);
+    diff2htmlUi.draw();
+  });
+</script>
+<p>In <code>new</code> we now create the <code>Pie</code> instance with a writing tracker: <code>WritingTracker::new(Cursor::new(Vec::new()))</code>.
+This writing tracker writes to a <a href="https://doc.rust-lang.org/std/io/struct.Cursor.html" title="" target="_blank">
+<code>Cursor</code></a>, specifically <code>Cursor&lt;Vec&lt;u8&gt;&gt;</code> for which <a href="https://doc.rust-lang.org/src/std/io/cursor.rs.html#570-591" title="" target="_blank">
+<code>Write</code> is implemented</a>.
+We modify the type of the <code>pie</code> field to include the tracker type to reflect this: <code>WritingTracker&lt;Cursor&lt;Vec&lt;u8&gt;&gt;&gt;</code>.
+Build logs will then be written to the <code>Vec&lt;u8&gt;</code> inside the <code>Cursor</code>.</p>
+<p>To draw the build log in between the buffers and help line, we first modify the layout split into <code>root_areas</code>: buffers now take up 70% of vertical space, and add a new constraint for the build log which takes 30% of vertical space.</p>
+<p>We access the in-memory buffer via <code>&amp;self.pie.tracker().writer().get_ref()</code>, convert this to a string via <a href="https://doc.rust-lang.org/std/string/struct.String.html#method.from_utf8_lossy" title="" target="_blank">
+<code>String::from_utf8_lossy</code></a>, and convert that to <a href="https://docs.rs/ratatui/latest/ratatui/text/struct.Text.html" title="" target="_blank">Ratatui <code>Text</code></a> which can be passed to <a href="https://docs.rs/ratatui/latest/ratatui/widgets/struct.Paragraph.html#method.new" title="" target="_blank">
+<code>Paragraph::new</code></a> and also gives us line information for scrolling the build log.
+The scroll calculation is explained in the comments.
+We then draw the build log as a <code>Paragraph</code>.</p>
+<p>Finally, we update the area for the help line from <code>root_areas[1]</code> to <code>root_areas[2]</code>, as adding the layout constraint shifted the index up.</p>
+<p>Try out the code again with <code>cargo run --example parser_dev -- test.pest main test_1.test test_2.test -e</code> in a terminal.
+Pressing Control+S causes tasks to be required, which is shown in the build log.
+Try modifying a single file to see what tasks PIE executes, or what the effect of an error in the grammar has.</p>
+<p>And with that, we’re done with the interactive parser development example 🎉🎉🎉!</p>
+<h2 id="conclusion"><a class="header" href="#conclusion">Conclusion</a></h2>
+<p>In this example, we developed tasks for compiling a grammar and parsing files with that grammar, and then used those tasks to implement both a batch build, and an interactive parser development environment.</p>
+<p>In the introduction, we <a href="../0_intro/index.html#motivation">motivated</a> programmatic incremental build systems with the key properties of: programmatic, incremental, correct, automatic, and multipurpose.
+Did these properties help with the implementation of this example application?</p>
+<ul>
+<li>Programmatic: due to the build script – that is: the compile grammar and parse tasks – being written in the same programming language as the application, it was extremely simple to integrate. We also didn’t have to learn a separate language, we could just apply our knowledge of Rust!</li>
+<li>Incremental: PIE incrementalized the build for us, so we didn’t have to implement incrementality.
+<ul>
+<li>The batch build is unfortunately not incremental due to not having implemented serialization in this tutorial, but this is not a fundamental limitation. See <a href="#side-note-serialization">Side Note: Serialization</a> for info on how to solve this.</li>
+</ul>
+</li>
+<li>Correct: PIE ensures the build is correct, so we don’t have to worry about glitches or inconsistent data.
+<ul>
+<li>For a real application, we should write tests to increase the confidence that our build is correct, because PIE checks for correctness at runtime.</li>
+</ul>
+</li>
+<li>Automatic: we didn’t manually implement incrementality, but only specified the dependencies: from compile grammar/parse task to a file, and from parse tasks to compile grammar tasks. This saves development time that would be spent on incrementalization and making sure that it is correct. For larger applications, this can end up saving a lot of development time.</li>
+<li>Multipurpose: we reused the same tasks for both a batch build and for use in an interactive environment, without any modifications. Again, this saves development time.</li>
+</ul>
+<p>So yes, I think programmatic incremental build systems, and in particular PIE, help a lot when developing these kind of applications.
+In larger applications, the benefits can be even larger, due to saving more development time.</p>
+<p>You should of course decide for yourself whether PIE really helped with implementing this example.
+Every problem is different, and requires separate considerations as to what tools are the best for solving that particular problem.</p>
+<p>This is currently the end of the guided programming tutorial.
+In the appendix chapters, we discuss PIE implementations and publications, related work, and future work.</p>
+<details id="admonition-download-source-code" class="admonition admonish-example">
+<summary class="admonition-title">
+<p>Download source code</p>
+<p><a class="admonition-anchor-link" href="#admonition-download-source-code"></a></p>
+</summary>
+<div>
+<p>You can <a href="../../gen/4_example/source.zip">download the source files up to this point</a>.</p>
+</div>
+</details>
+<h2 id="side-note-serialization"><a class="header" href="#side-note-serialization">Side Note: Serialization</a></h2>
+<p>To get incrementality between different runs (i.e., processes) of the program, we need to serialize the <code>Store</code> before the program exits, and deserialize the <code>Store</code> when the program starts.</p>
+<p>The de-facto standard (and awesome) serialization library in Rust in <a href="https://serde.rs/" title="" target="_blank">serde</a>.
+See the <a href="https://github.com/Gohla/pie/blob/pre_type_refactor/pie/" title="" target="_blank">PIE in Rust repository at the <code>pre_type_refactor</code> tag</a> for a version of PIE with serde serialization.
+For example, the <a href="https://github.com/Gohla/pie/blob/pre_type_refactor/pie/src/store.rs#L14-L17" title="" target="_blank">
+<code>Store</code></a> struct has annotations for deriving <code>serde::Deserialize</code> and <code>serde::Serialize</code>.
+These attributes are somewhat convoluted due to serialization being optional, and due to the <code>H</code> generic type parameter which should not be included into serialization bounds.</p>
+<p>You should derive <code>serde::Deserialize</code> and <code>serde::Serialize</code> for all required types in the PIE library, but also all tasks, and all task outputs.
+The <code>pie_graph</code> library support serialization when the <code>serde</code> feature is enabled, which is enabled by default.
+Then, see <a href="https://github.com/Gohla/pie/blob/pre_type_refactor/pie/tests/serde.rs" title="" target="_blank">this serialization integration test</a>.</p>
 
                     </main>
 

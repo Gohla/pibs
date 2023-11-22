@@ -1,0 +1,99 @@
+--- pie/examples/parser_dev/editor.rs
++++ pie/examples/parser_dev/editor.rs
+@@ -1,3 +1,4 @@
++use std::fmt::Write;
+ use std::io;
+ 
+ use crossterm::event::{DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind, KeyModifiers};
+@@ -7,8 +8,11 @@
+ use ratatui::Terminal;
+ use ratatui::widgets::Paragraph;
+ 
++use pie::Pie;
++
+ use crate::Args;
+ use crate::editor::buffer::Buffer;
++use crate::task::{Outputs, Tasks};
+ 
+ mod buffer;
+ 
+@@ -16,6 +20,8 @@
+ pub struct Editor {
+   buffers: Vec<Buffer>,
+   active_buffer: usize,
++  rule_name: String,
++  pie: Pie<Tasks, Result<Outputs, String>>,
+ }
+ 
+ impl Editor {
+@@ -31,7 +37,9 @@
+       buffers.push(Buffer::new(path)?); // Subsequent buffers are always example program buffers.
+     }
+ 
+-    let editor = Self { buffers, active_buffer: 0, };
++    let pie = Pie::default();
++    let mut editor = Self { buffers, active_buffer: 0, rule_name: args.rule_name, pie };
++    editor.save_and_update_buffers(false);
+     Ok(editor)
+   }
+ 
+@@ -88,7 +96,7 @@
+ 
+       // Draw help line on the last line (`root_areas[1]`).
+       let help = Paragraph::new("Interactive Parser Development. Press Esc to quit, ^T to switch the active \
+-                                 buffer.");
++                                 buffer, ^S to save all buffers and provide feedback.");
+       frame.render_widget(help, root_areas[1]);
+     })?;
+ 
+@@ -98,9 +106,50 @@
+       Event::Key(key) if key.code == KeyCode::Char('t') && key.modifiers.contains(KeyModifiers::CONTROL) => {
+         self.active_buffer = (self.active_buffer + 1) % self.buffers.len();
+       }
++      Event::Key(key) if key.code == KeyCode::Char('s') && key.modifiers.contains(KeyModifiers::CONTROL) => {
++        self.save_and_update_buffers(true);
++      },
+       event => self.buffers[self.active_buffer].process_event(event), // Otherwise: forward to current buffer.
+     };
+ 
+     Ok(true)
+   }
++
++  fn save_and_update_buffers(&mut self, save: bool) {
++    for buffer in &mut self.buffers {
++      buffer.feedback_mut().clear();
++    }
++
++    if save {
++      for buffer in &mut self.buffers {
++        if let Err(error) = buffer.save_if_modified() {
++          // Ignore error: writing to String cannot fail.
++          let _ = writeln!(buffer.feedback_mut(), "Saving file failed: {}", error);
++        }
++      }
++    }
++
++    let mut session = self.pie.new_session();
++
++    let grammar_buffer = &mut self.buffers[0];
++    let compile_grammar_task = Tasks::compile_grammar(grammar_buffer.path());
++    match session.require(&compile_grammar_task) {
++      Err(error) => {
++        let _ = writeln!(grammar_buffer.feedback_mut(), "{}", error);
++        return; // Skip parsing if compiling grammar failed.
++      }
++      _ => {}
++    }
++
++    let compile_grammar_task = Box::new(compile_grammar_task);
++    for buffer in &mut self.buffers[1..] {
++      let task = Tasks::parse(&compile_grammar_task, buffer.path(), &self.rule_name);
++      let feedback = buffer.feedback_mut();
++      match session.require(&task) {
++        Err(error) => { let _ = writeln!(feedback, "{}", error); },
++        Ok(Outputs::Parsed(Some(output))) => { let _ = writeln!(feedback, "Parsing succeeded: {}", output); },
++        _ => {}
++      }
++    }
++  }
+ }

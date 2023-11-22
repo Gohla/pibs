@@ -1,0 +1,77 @@
+--- pie/examples/parser_dev/editor.rs
++++ pie/examples/parser_dev/editor.rs
+@@ -1,14 +1,17 @@
+ use std::fmt::Write;
+ use std::io;
++use std::io::Cursor;
+ 
+ use crossterm::event::{DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind, KeyModifiers};
+ use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
+ use ratatui::backend::{Backend, CrosstermBackend};
+ use ratatui::layout::{Constraint, Direction, Layout};
+ use ratatui::Terminal;
+-use ratatui::widgets::Paragraph;
++use ratatui::text::Text;
++use ratatui::widgets::{Block, Borders, Paragraph};
+ 
+ use pie::Pie;
++use pie::tracker::writing::WritingTracker;
+ 
+ use crate::Args;
+ use crate::editor::buffer::Buffer;
+@@ -21,7 +24,7 @@
+   buffers: Vec<Buffer>,
+   active_buffer: usize,
+   rule_name: String,
+-  pie: Pie<Tasks, Result<Outputs, String>>,
++  pie: Pie<Tasks, Result<Outputs, String>, WritingTracker<Cursor<Vec<u8>>>>,
+ }
+ 
+ impl Editor {
+@@ -37,7 +40,7 @@
+       buffers.push(Buffer::new(path)?); // Subsequent buffers are always example program buffers.
+     }
+ 
+-    let pie = Pie::default();
++    let pie = Pie::with_tracker(WritingTracker::new(Cursor::new(Vec::new())));
+     let mut editor = Self { buffers, active_buffer: 0, rule_name: args.rule_name, pie };
+     editor.save_and_update_buffers(false);
+     Ok(editor)
+@@ -73,7 +76,7 @@
+     terminal.draw(|frame| {
+       let root_areas = Layout::default()
+         .direction(Direction::Vertical)
+-        .constraints(vec![Constraint::Percentage(100), Constraint::Min(1)])
++        .constraints(vec![Constraint::Percentage(70), Constraint::Percentage(30), Constraint::Min(1)])
+         .split(frame.size());
+       let buffer_areas = Layout::default()
+         .direction(Direction::Horizontal)
+@@ -94,10 +97,26 @@
+         buffer.draw(frame, *area, self.active_buffer == i);
+       }
+ 
+-      // Draw help line on the last line (`root_areas[1]`).
++      { // Draw build log on the bottom (`root_areas[1]`).
++        let text = Text::raw(String::from_utf8_lossy(&self.pie.tracker().writer().get_ref()));
++
++        // Scroll down to last line, but that hides the entire build log.
++        let scroll = text.height() as u16;
++        // Scroll up the height of the build log area, making it visible. Use saturating sub to prevent overflows.
++        let scroll = scroll.saturating_sub(root_areas[1].height);
++        // Scroll down 2 lines due to the top and bottom border taking up 2 lines.
++        let scroll = scroll + 2;
++
++        let build_log = Paragraph::new(text)
++          .block(Block::default().title("Build log").borders(Borders::ALL))
++          .scroll((scroll, 0));
++        frame.render_widget(build_log, root_areas[1]);
++      };
++
++      // Draw help line on the last line (`root_areas[2]`).
+       let help = Paragraph::new("Interactive Parser Development. Press Esc to quit, ^T to switch the active \
+                                  buffer, ^S to save all buffers and provide feedback.");
+-      frame.render_widget(help, root_areas[1]);
++      frame.render_widget(help, root_areas[2]);
+     })?;
+ 
+     match crossterm::event::read()? {

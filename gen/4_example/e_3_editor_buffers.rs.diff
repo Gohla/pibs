@@ -43,7 +43,7 @@
    }
  
    /// Run the editor, drawing it into an alternate screen of the terminal.
-@@ -47,13 +63,43 @@
+@@ -47,13 +63,42 @@
  
    fn draw_and_process_event<B: Backend>(&mut self, terminal: &mut Terminal<B>) -> Result<bool, io::Error> {
      terminal.draw(|frame| {
@@ -60,21 +60,20 @@
 +      // Draw grammar buffer on the left (`buffer_areas[0]`).
 +      self.buffers[0].draw(frame, buffer_areas[0], self.active_buffer == 0);
 +
-+      { // Draw example program buffers on the right (`buffer_areas[1]`).
-+        let num_program_buffers = self.buffers.len() - 1;
-+        // Split vertical space between example program buffers.
-+        let program_buffer_areas = Layout::default()
-+          .direction(Direction::Vertical)
-+          .constraints(vec![Constraint::Ratio(1, num_program_buffers as u32); num_program_buffers])
-+          .split(buffer_areas[1]);
-+        for ((buffer, area), i) in self.buffers[1..].iter_mut().zip(program_buffer_areas.iter()).zip(1..) {
-+          buffer.draw(frame, *area, self.active_buffer == i);
-+        }
++      // Draw example program buffers on the right (`buffer_areas[1]`).
++      let num_program_buffers = self.buffers.len() - 1;
++      // Split vertical space between example program buffers.
++      let program_buffer_areas = Layout::default()
++        .direction(Direction::Vertical)
++        .constraints(vec![Constraint::Ratio(1, num_program_buffers as u32); num_program_buffers])
++        .split(buffer_areas[1]);
++      for ((buffer, area), i) in self.buffers[1..].iter_mut().zip(program_buffer_areas.iter()).zip(1..) {
++        buffer.draw(frame, *area, self.active_buffer == i);
 +      }
 +
 +      // Draw help line on the last line (`root_areas[1]`).
-+      let help = Paragraph::new("Interactive Parser Development. Press Esc to quit, ^T to switch active \
-+                                            buffer.");
++      let help = Paragraph::new("Interactive Parser Development. Press Esc to quit, ^T to switch the active \
++                                 buffer.");
 +      frame.render_widget(help, root_areas[1]);
      })?;
  

@@ -1,45 +1,47 @@
-use std::fmt::Write as _;
-use std::fs::{File, read_to_string};
-use std::io::{self, Cursor, Write as _};
-use std::path::PathBuf;
+use std::fmt::Write;
+use std::io;
+use std::io::Cursor;
 
 use crossterm::event::{DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind, KeyModifiers};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
-use ratatui::{Frame, Terminal};
 use ratatui::backend::{Backend, CrosstermBackend};
-use ratatui::layout::{Constraint, Direction, Layout, Rect};
-use ratatui::style::{Color, Modifier, Style};
+use ratatui::layout::{Constraint, Direction, Layout};
+use ratatui::Terminal;
 use ratatui::text::Text;
-use ratatui::widgets::{Block, Borders, Paragraph, Wrap};
-use tui_textarea::TextArea;
+use ratatui::widgets::{Block, Borders, Paragraph};
 
 use pie::Pie;
 use pie::tracker::writing::WritingTracker;
 
 use crate::Args;
+use crate::editor::buffer::Buffer;
 use crate::task::{Outputs, Tasks};
+
+mod buffer;
 
 /// Live parser development editor.
 pub struct Editor {
-  pie: Pie<Tasks, Result<Outputs, String>, WritingTracker<Cursor<Vec<u8>>>>,
   buffers: Vec<Buffer>,
   active_buffer: usize,
   rule_name: String,
+  pie: Pie<Tasks, Result<Outputs, String>, WritingTracker<Cursor<Vec<u8>>>>,
 }
 
 impl Editor {
   /// Create a new editor from `args`.
+  ///
+  /// # Errors
+  ///
+  /// Returns an error when creating a buffer fails.
   pub fn new(args: Args) -> Result<Self, io::Error> {
-    let tracker = WritingTracker::new(Cursor::new(Vec::new()));
-    let pie = Pie::with_tracker(tracker);
-
     let mut buffers = Vec::with_capacity(1 + args.program_file_paths.len());
     buffers.push(Buffer::new(args.grammar_file_path)?); // First buffer is always the grammar buffer.
     for path in args.program_file_paths {
-      buffers.push(Buffer::new(path)?); // Subsequent buffers are always program buffers.
+      buffers.push(Buffer::new(path)?); // Subsequent buffers are always example program buffers.
     }
 
-    let mut editor = Self { pie, buffers, active_buffer: 0, rule_name: args.rule_name, };
+    let pie = Pie::with_tracker(WritingTracker::new(Cursor::new(Vec::new())));
+    let mut editor = Self { buffers, active_buffer: 0, rule_name: args.rule_name, pie };
     editor.save_and_update_buffers(false);
     Ok(editor)
   }
@@ -74,7 +76,7 @@ impl Editor {
     terminal.draw(|frame| {
       let root_areas = Layout::default()
         .direction(Direction::Vertical)
-        .constraints(vec![Constraint::Percentage(80), Constraint::Percentage(20), Constraint::Min(1)])
+        .constraints(vec![Constraint::Percentage(70), Constraint::Percentage(30), Constraint::Min(1)])
         .split(frame.size());
       let buffer_areas = Layout::default()
         .direction(Direction::Horizontal)
@@ -84,15 +86,15 @@ impl Editor {
       // Draw grammar buffer on the left (`buffer_areas[0]`).
       self.buffers[0].draw(frame, buffer_areas[0], self.active_buffer == 0);
 
-      { // Draw program buffers on the right (`buffer_areas[1]`).
-        let num_buffers = self.buffers.len() - 1;
-        let areas = Layout::default()
-          .direction(Direction::Vertical)
-          .constraints(vec![Constraint::Ratio(1, num_buffers as u32); num_buffers])
-          .split(buffer_areas[1]);
-        for ((buffer, area), i) in self.buffers[1..].iter_mut().zip(areas.iter()).zip(1..) {
-          buffer.draw(frame, *area, self.active_buffer == i);
-        }
+      // Draw example program buffers on the right (`buffer_areas[1]`).
+      let num_program_buffers = self.buffers.len() - 1;
+      // Split vertical space between example program buffers.
+      let program_buffer_areas = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(vec![Constraint::Ratio(1, num_program_buffers as u32); num_program_buffers])
+        .split(buffer_areas[1]);
+      for ((buffer, area), i) in self.buffers[1..].iter_mut().zip(program_buffer_areas.iter()).zip(1..) {
+        buffer.draw(frame, *area, self.active_buffer == i);
       }
 
       { // Draw build log on the bottom (`root_areas[1]`).
@@ -105,16 +107,16 @@ impl Editor {
         // Scroll down 2 lines due to the top and bottom border taking up 2 lines.
         let scroll = scroll + 2;
 
-        let widget = Paragraph::new(text)
+        let build_log = Paragraph::new(text)
           .block(Block::default().title("Build log").borders(Borders::ALL))
           .scroll((scroll, 0));
-        frame.render_widget(widget, root_areas[1]);
+        frame.render_widget(build_log, root_areas[1]);
       };
 
-      // Draw status line on the last line (`root_areas[2]`).
-      let status = Paragraph::new("Live Parser Development. Press Esc to quit, ^T to switch active \
-                                            buffer, ^S to save modified buffers and test changes.");
-      frame.render_widget(status, root_areas[2]);
+      // Draw help line on the last line (`root_areas[2]`).
+      let help = Paragraph::new("Interactive Parser Development. Press Esc to quit, ^T to switch the active \
+                                 buffer, ^S to save all buffers and provide feedback.");
+      frame.render_widget(help, root_areas[2]);
     })?;
 
     match crossterm::event::read()? {
@@ -134,14 +136,14 @@ impl Editor {
 
   fn save_and_update_buffers(&mut self, save: bool) {
     for buffer in &mut self.buffers {
-      buffer.status_mut().clear();
+      buffer.feedback_mut().clear();
     }
 
     if save {
       for buffer in &mut self.buffers {
         if let Err(error) = buffer.save_if_modified() {
           // Ignore error: writing to String cannot fail.
-          let _ = write!(buffer.status_mut(), "Saving file failed: {}", error);
+          let _ = writeln!(buffer.feedback_mut(), "Saving file failed: {}", error);
         }
       }
     }
@@ -152,7 +154,7 @@ impl Editor {
     let compile_grammar_task = Tasks::compile_grammar(grammar_buffer.path());
     match session.require(&compile_grammar_task) {
       Err(error) => {
-        let _ = write!(grammar_buffer.status_mut(), "{}", error);
+        let _ = writeln!(grammar_buffer.feedback_mut(), "{}", error);
         return; // Skip parsing if compiling grammar failed.
       }
       _ => {}
@@ -161,89 +163,12 @@ impl Editor {
     let compile_grammar_task = Box::new(compile_grammar_task);
     for buffer in &mut self.buffers[1..] {
       let task = Tasks::parse(&compile_grammar_task, buffer.path(), &self.rule_name);
+      let feedback = buffer.feedback_mut();
       match session.require(&task) {
-        Err(error) => { let _ = write!(buffer.status_mut(), "{}", error); },
-        Ok(Outputs::Parsed(Some(output))) => { let _ = write!(buffer.status_mut(), "Parsing succeeded: {}", output); },
+        Err(error) => { let _ = writeln!(feedback, "{}", error); },
+        Ok(Outputs::Parsed(Some(output))) => { let _ = writeln!(feedback, "Parsing succeeded: {}", output); },
         _ => {}
       }
     }
   }
-}
-
-
-struct Buffer {
-  path: PathBuf,
-  text_area: TextArea<'static>,
-  modified: bool,
-  status: String,
-}
-
-impl Buffer {
-  fn new(path: PathBuf) -> Result<Self, io::Error> {
-    let text = read_to_string(&path)?;
-
-    let mut text_area = TextArea::from(text.lines());
-    text_area.set_line_number_style(Style::default());
-
-    Ok(Self { path, text_area, modified: false, status: String::default() })
-  }
-
-  fn draw(&mut self, frame: &mut Frame, area: Rect, active: bool) {
-    let mut cursor_line_style = Style::default();
-    let mut cursor_style = Style::default();
-    let mut block = Block::default().borders(Borders::ALL);
-    let mut block_style = Style::default();
-
-    if active {
-      cursor_line_style = cursor_line_style.add_modifier(Modifier::UNDERLINED);
-      cursor_style = cursor_style.add_modifier(Modifier::REVERSED);
-      block_style = block_style.fg(Color::Gray);
-    }
-
-    block = block.style(block_style);
-    if let Some(file_name) = self.path.file_name() {
-      block = block.title(format!("{}", file_name.to_string_lossy()))
-    }
-    if self.modified {
-      block = block.title("[modified]");
-    }
-
-    self.text_area.set_cursor_line_style(cursor_line_style);
-    self.text_area.set_cursor_style(cursor_style);
-    self.text_area.set_block(block);
-
-    let areas = Layout::default()
-      .direction(Direction::Vertical)
-      .constraints(vec![Constraint::Percentage(80), Constraint::Min(7)])
-      .split(area);
-
-    frame.render_widget(self.text_area.widget(), areas[0]);
-
-    let status = Paragraph::new(self.status.clone())
-      .wrap(Wrap::default())
-      .block(Block::default().style(block_style).borders(Borders::ALL - Borders::TOP));
-    frame.render_widget(status, areas[1]);
-  }
-
-  fn process_event(&mut self, event: Event) {
-    self.modified |= self.text_area.input(event);
-  }
-
-  fn save_if_modified(&mut self) -> Result<(), io::Error> {
-    if !self.modified {
-      return Ok(());
-    }
-    let mut file = io::BufWriter::new(File::create(&self.path)?);
-    for line in self.text_area.lines() {
-      file.write_all(line.as_bytes())?;
-      file.write_all(b"\n")?;
-    }
-    file.flush()?;
-    self.modified = false;
-    Ok(())
-  }
-
-  fn path(&self) -> &PathBuf { &self.path }
-
-  fn status_mut(&mut self) -> &mut String { &mut self.status }
 }

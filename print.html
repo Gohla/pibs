@@ -641,7 +641,7 @@ It returns the output of the task, which we test with <code>assert_eq!</code>.</
 <p>Run the test by running <code>cargo test</code>.
 The output should look something like:</p>
 <pre><code class="language-shell ">   Compiling pie v0.1.0 (/pie)
-    Finished test [unoptimized + debuginfo] target(s) in 0.47s
+    Finished test [unoptimized + debuginfo] target(s) in 0.41s
      Running unittests src/lib.rs (target/debug/deps/pie-7f6c7927ea39bed5)
 
 running 1 test
@@ -3511,7 +3511,7 @@ Run this example with <code>cargo run --example incremental</code>.
 You should see the <code>println!</code> in <code>ReadStringFromFile</code> appear in your console as the incremental context correctly determines that this task is new (i.e., has no output) and must be executed.
 It should look something like:</p>
 <pre><code>   Compiling pie v0.1.0 (/pie)
-    Finished dev [unoptimized + debuginfo] target(s) in 0.65s
+    Finished dev [unoptimized + debuginfo] target(s) in 0.61s
      Running `target/debug/examples/incremental`
 A) New task: expect `read_task` to execute
 Reading from input.txt with Modified stamper
@@ -3526,7 +3526,7 @@ Reading from input.txt with Modified stamper
   assert_eq!(&amp;output, &quot;Hi&quot;);</code></pre>
 <p>Running with <code>cargo run --example incremental</code> should produce output like:</p>
 <pre><code>   Compiling pie v0.1.0 (/pie)
-    Finished dev [unoptimized + debuginfo] target(s) in 0.36s
+    Finished dev [unoptimized + debuginfo] target(s) in 0.34s
      Running `target/debug/examples/incremental`
 A) New task: expect `read_task` to execute
 Reading from input.txt with Modified stamper
@@ -3588,7 +3588,7 @@ This shows that tasks can depend on the same file with different stampers, which
 <p>Of course, using an <code>Exists</code> stamper for <code>ReadStringFromFile</code> does not make a lot of sense, but this is for demonstration purposes only.</p>
 <p>Running <code>cargo run --example incremental</code> now should produce output like:</p>
 <pre><code>   Compiling pie v0.1.0 (/pie)
-    Finished dev [unoptimized + debuginfo] target(s) in 0.37s
+    Finished dev [unoptimized + debuginfo] target(s) in 0.34s
      Running `target/debug/examples/incremental`
 A) New task: expect `read_task` to execute
 Reading from input.txt with Modified stamper
@@ -4877,55 +4877,55 @@ You can add configuration booleans to control what should be written, but in thi
 <p>We remove the <code>println!</code> statements from tasks and create <code>Pie</code> with <code>WritingTracker</code>.
 Now run the example with <code>cargo run --example incremental</code>, and you should see the writing tracker print to standard output:</p>
 <pre><code>   Compiling pie v0.1.0 (/pie)
-    Finished dev [unoptimized + debuginfo] target(s) in 0.46s
+    Finished dev [unoptimized + debuginfo] target(s) in 0.43s
      Running `target/debug/examples/incremental`
 A) New task: expect `read_task` to execute
-→ ReadStringFromFile(&quot;/tmp/.tmp0v98I5/input.txt&quot;, Modified)
- ▶ ReadStringFromFile(&quot;/tmp/.tmp0v98I5/input.txt&quot;, Modified)
-  - /tmp/.tmp0v98I5/input.txt
+→ ReadStringFromFile(&quot;/tmp/.tmpneUSD7/input.txt&quot;, Modified)
+ ▶ ReadStringFromFile(&quot;/tmp/.tmpneUSD7/input.txt&quot;, Modified)
+  - /tmp/.tmpneUSD7/input.txt
  ◀ Ok(&quot;Hi&quot;)
 ← Ok(&quot;Hi&quot;)
 🏁
 
 B) Reuse: expect no execution
-→ ReadStringFromFile(&quot;/tmp/.tmp0v98I5/input.txt&quot;, Modified)
- ✓ /tmp/.tmp0v98I5/input.txt
+→ ReadStringFromFile(&quot;/tmp/.tmpneUSD7/input.txt&quot;, Modified)
+ ✓ /tmp/.tmpneUSD7/input.txt
 ← Ok(&quot;Hi&quot;)
 🏁
 
 C) Inconsistent file dependency: expect `read_task` to execute
-→ ReadStringFromFile(&quot;/tmp/.tmp0v98I5/input.txt&quot;, Modified)
- ✗ /tmp/.tmp0v98I5/input.txt (old: Modified(Some(SystemTime { tv_sec: 1700650921, tv_nsec: 571072713 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1700650921, tv_nsec: 575072701 })))
- ▶ ReadStringFromFile(&quot;/tmp/.tmp0v98I5/input.txt&quot;, Modified)
-  - /tmp/.tmp0v98I5/input.txt
+→ ReadStringFromFile(&quot;/tmp/.tmpneUSD7/input.txt&quot;, Modified)
+ ✗ /tmp/.tmpneUSD7/input.txt (old: Modified(Some(SystemTime { tv_sec: 1700665005, tv_nsec: 169815905 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1700665005, tv_nsec: 173815920 })))
+ ▶ ReadStringFromFile(&quot;/tmp/.tmpneUSD7/input.txt&quot;, Modified)
+  - /tmp/.tmpneUSD7/input.txt
  ◀ Ok(&quot;Hello&quot;)
 ← Ok(&quot;Hello&quot;)
 🏁
 
 D) Different tasks: expect `read_task_b_modified` and `read_task_b_exists` to execute
-→ ReadStringFromFile(&quot;/tmp/.tmp0v98I5/input_b.txt&quot;, Modified)
- ▶ ReadStringFromFile(&quot;/tmp/.tmp0v98I5/input_b.txt&quot;, Modified)
-  - /tmp/.tmp0v98I5/input_b.txt
+→ ReadStringFromFile(&quot;/tmp/.tmpneUSD7/input_b.txt&quot;, Modified)
+ ▶ ReadStringFromFile(&quot;/tmp/.tmpneUSD7/input_b.txt&quot;, Modified)
+  - /tmp/.tmpneUSD7/input_b.txt
  ◀ Ok(&quot;Test&quot;)
 ← Ok(&quot;Test&quot;)
 🏁
-→ ReadStringFromFile(&quot;/tmp/.tmp0v98I5/input_b.txt&quot;, Exists)
- ▶ ReadStringFromFile(&quot;/tmp/.tmp0v98I5/input_b.txt&quot;, Exists)
-  - /tmp/.tmp0v98I5/input_b.txt
+→ ReadStringFromFile(&quot;/tmp/.tmpneUSD7/input_b.txt&quot;, Exists)
+ ▶ ReadStringFromFile(&quot;/tmp/.tmpneUSD7/input_b.txt&quot;, Exists)
+  - /tmp/.tmpneUSD7/input_b.txt
  ◀ Ok(&quot;Test&quot;)
 ← Ok(&quot;Test&quot;)
 🏁
 
 E) Different stampers: expect only `read_task_b_modified` to execute
-→ ReadStringFromFile(&quot;/tmp/.tmp0v98I5/input_b.txt&quot;, Modified)
- ✗ /tmp/.tmp0v98I5/input_b.txt (old: Modified(Some(SystemTime { tv_sec: 1700650921, tv_nsec: 575072701 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1700650921, tv_nsec: 579072691 })))
- ▶ ReadStringFromFile(&quot;/tmp/.tmp0v98I5/input_b.txt&quot;, Modified)
-  - /tmp/.tmp0v98I5/input_b.txt
+→ ReadStringFromFile(&quot;/tmp/.tmpneUSD7/input_b.txt&quot;, Modified)
+ ✗ /tmp/.tmpneUSD7/input_b.txt (old: Modified(Some(SystemTime { tv_sec: 1700665005, tv_nsec: 173815920 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1700665005, tv_nsec: 177815935 })))
+ ▶ ReadStringFromFile(&quot;/tmp/.tmpneUSD7/input_b.txt&quot;, Modified)
+  - /tmp/.tmpneUSD7/input_b.txt
  ◀ Ok(&quot;Test Test&quot;)
 ← Ok(&quot;Test Test&quot;)
 🏁
-→ ReadStringFromFile(&quot;/tmp/.tmp0v98I5/input_b.txt&quot;, Exists)
- ✓ /tmp/.tmp0v98I5/input_b.txt
+→ ReadStringFromFile(&quot;/tmp/.tmpneUSD7/input_b.txt&quot;, Exists)
+ ✓ /tmp/.tmpneUSD7/input_b.txt
 ← Ok(&quot;Test&quot;)
 🏁
 </code></pre>
@@ -6290,23 +6290,23 @@ How can that be?</p>
 </div>
 <p>Inspect the build log with <code>cargo test --test top_down test_no_superfluous_task_dependencies</code>.
 The third (last) build log should look like this:</p>
-<pre><code>→ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmpCSeeAI/in.txt&quot;, Modified)))
- ? ReadFile(&quot;/tmp/.tmpCSeeAI/in.txt&quot;, Modified)
-  → ReadFile(&quot;/tmp/.tmpCSeeAI/in.txt&quot;, Modified)
-   ✗ /tmp/.tmpCSeeAI/in.txt (old: Modified(Some(SystemTime { tv_sec: 1700650928, tv_nsec: 863052136 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1700650928, tv_nsec: 867052125 })))
-   ▶ ReadFile(&quot;/tmp/.tmpCSeeAI/in.txt&quot;, Modified)
-    - /tmp/.tmpCSeeAI/in.txt
+<pre><code>→ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmpzuKlky/in.txt&quot;, Modified)))
+ ? ReadFile(&quot;/tmp/.tmpzuKlky/in.txt&quot;, Modified)
+  → ReadFile(&quot;/tmp/.tmpzuKlky/in.txt&quot;, Modified)
+   ✗ /tmp/.tmpzuKlky/in.txt (old: Modified(Some(SystemTime { tv_sec: 1700665012, tv_nsec: 121842026 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1700665012, tv_nsec: 125842042 })))
+   ▶ ReadFile(&quot;/tmp/.tmpzuKlky/in.txt&quot;, Modified)
+    - /tmp/.tmpzuKlky/in.txt
    ◀ Ok(String(&quot;HeLLo, WorLd!&quot;))
   ← Ok(String(&quot;HeLLo, WorLd!&quot;))
- ✗ ReadFile(&quot;/tmp/.tmpCSeeAI/in.txt&quot;, Modified) (old: Equals(Ok(String(&quot;Hello, World!&quot;))) ≠ new: Equals(Ok(String(&quot;HeLLo, WorLd!&quot;))))
- ▶ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmpCSeeAI/in.txt&quot;, Modified)))
-  → ToLower(ReadFile(&quot;/tmp/.tmpCSeeAI/in.txt&quot;, Modified))
-   ? ReadFile(&quot;/tmp/.tmpCSeeAI/in.txt&quot;, Modified)
-    → ReadFile(&quot;/tmp/.tmpCSeeAI/in.txt&quot;, Modified)
+ ✗ ReadFile(&quot;/tmp/.tmpzuKlky/in.txt&quot;, Modified) (old: Equals(Ok(String(&quot;Hello, World!&quot;))) ≠ new: Equals(Ok(String(&quot;HeLLo, WorLd!&quot;))))
+ ▶ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmpzuKlky/in.txt&quot;, Modified)))
+  → ToLower(ReadFile(&quot;/tmp/.tmpzuKlky/in.txt&quot;, Modified))
+   ? ReadFile(&quot;/tmp/.tmpzuKlky/in.txt&quot;, Modified)
+    → ReadFile(&quot;/tmp/.tmpzuKlky/in.txt&quot;, Modified)
     ← Ok(String(&quot;HeLLo, WorLd!&quot;))
-   ✗ ReadFile(&quot;/tmp/.tmpCSeeAI/in.txt&quot;, Modified) (old: Equals(Ok(String(&quot;Hello, World!&quot;))) ≠ new: Equals(Ok(String(&quot;HeLLo, WorLd!&quot;))))
-   ▶ ToLower(ReadFile(&quot;/tmp/.tmpCSeeAI/in.txt&quot;, Modified))
-    → ReadFile(&quot;/tmp/.tmpCSeeAI/in.txt&quot;, Modified)
+   ✗ ReadFile(&quot;/tmp/.tmpzuKlky/in.txt&quot;, Modified) (old: Equals(Ok(String(&quot;Hello, World!&quot;))) ≠ new: Equals(Ok(String(&quot;HeLLo, WorLd!&quot;))))
+   ▶ ToLower(ReadFile(&quot;/tmp/.tmpzuKlky/in.txt&quot;, Modified))
+    → ReadFile(&quot;/tmp/.tmpzuKlky/in.txt&quot;, Modified)
     ← Ok(String(&quot;HeLLo, WorLd!&quot;))
    ◀ Ok(String(&quot;hello, world!&quot;))
   ← Ok(String(&quot;hello, world!&quot;))
@@ -6373,14 +6373,14 @@ Even if we are only <em>consistency checking</em> a task to see if it should be 
 We only manifested the bug in the last test due to having a chain of 2 task dependencies, and by carefully controlling what is being executed and what is being checked.</p>
 <p>Recall the second build in the <code>test_no_superfluous_task_dependencies</code> test.
 The build log for that build looks like:</p>
-<pre><code>→ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmpCSeeAI/in.txt&quot;, Modified)))
- ▶ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmpCSeeAI/in.txt&quot;, Modified)))
-  → ToLower(ReadFile(&quot;/tmp/.tmpCSeeAI/in.txt&quot;, Modified))
-   ? ReadFile(&quot;/tmp/.tmpCSeeAI/in.txt&quot;, Modified)
-    → ReadFile(&quot;/tmp/.tmpCSeeAI/in.txt&quot;, Modified)
-     ✓ /tmp/.tmpCSeeAI/in.txt
+<pre><code>→ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmpzuKlky/in.txt&quot;, Modified)))
+ ▶ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmpzuKlky/in.txt&quot;, Modified)))
+  → ToLower(ReadFile(&quot;/tmp/.tmpzuKlky/in.txt&quot;, Modified))
+   ? ReadFile(&quot;/tmp/.tmpzuKlky/in.txt&quot;, Modified)
+    → ReadFile(&quot;/tmp/.tmpzuKlky/in.txt&quot;, Modified)
+     ✓ /tmp/.tmpzuKlky/in.txt
     ← Ok(String(&quot;Hello, World!&quot;))
-   ✓ ReadFile(&quot;/tmp/.tmpCSeeAI/in.txt&quot;, Modified)
+   ✓ ReadFile(&quot;/tmp/.tmpzuKlky/in.txt&quot;, Modified)
   ← Ok(String(&quot;hello, world!&quot;))
  ◀ Ok(String(&quot;HELLO, WORLD!&quot;))
 ← Ok(String(&quot;HELLO, WORLD!&quot;))
@@ -6659,24 +6659,24 @@ However, <code>test_require_task</code> now fails 😅.</p>
 This is because our changes have correctly removed several superfluous task requires, which influences these assertions.</p>
 <p>Inspect the build log for this test with <code>cargo test --test top_down test_require_task</code>.
 The second build now looks like:</p>
-<pre><code>→ ToLower(ReadFile(&quot;/tmp/.tmpy4gMF0/in.txt&quot;, Modified))
- ? ReadFile(&quot;/tmp/.tmpy4gMF0/in.txt&quot;, Modified)
-  ✓ /tmp/.tmpy4gMF0/in.txt
- ✓ ReadFile(&quot;/tmp/.tmpy4gMF0/in.txt&quot;, Modified)
+<pre><code>→ ToLower(ReadFile(&quot;/tmp/.tmpo1faeE/in.txt&quot;, Modified))
+ ? ReadFile(&quot;/tmp/.tmpo1faeE/in.txt&quot;, Modified)
+  ✓ /tmp/.tmpo1faeE/in.txt
+ ✓ ReadFile(&quot;/tmp/.tmpo1faeE/in.txt&quot;, Modified)
 ← Ok(String(&quot;hello world!&quot;))
 </code></pre>
 <p>In this second build, <code>ReadFile</code> is now no longer required, and instead is only checked.
 This is correct, and does not make any assertions fail.</p>
 <p>The third build now looks like:</p>
-<pre><code>→ ToLower(ReadFile(&quot;/tmp/.tmpy4gMF0/in.txt&quot;, Modified))
- ? ReadFile(&quot;/tmp/.tmpy4gMF0/in.txt&quot;, Modified)
-  ✗ /tmp/.tmpy4gMF0/in.txt (old: Modified(Some(SystemTime { tv_sec: 1700650929, tv_nsec: 743049503 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1700650929, tv_nsec: 747049490 })))
-  ▶ ReadFile(&quot;/tmp/.tmpy4gMF0/in.txt&quot;, Modified)
-   - /tmp/.tmpy4gMF0/in.txt
+<pre><code>→ ToLower(ReadFile(&quot;/tmp/.tmpo1faeE/in.txt&quot;, Modified))
+ ? ReadFile(&quot;/tmp/.tmpo1faeE/in.txt&quot;, Modified)
+  ✗ /tmp/.tmpo1faeE/in.txt (old: Modified(Some(SystemTime { tv_sec: 1700665013, tv_nsec: 29845499 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1700665013, tv_nsec: 33845514 })))
+  ▶ ReadFile(&quot;/tmp/.tmpo1faeE/in.txt&quot;, Modified)
+   - /tmp/.tmpo1faeE/in.txt
   ◀ Ok(String(&quot;!DLROW OLLEH&quot;))
- ✗ ReadFile(&quot;/tmp/.tmpy4gMF0/in.txt&quot;, Modified) (old: Equals(Ok(String(&quot;HELLO WORLD!&quot;))) ≠ new: Equals(Ok(String(&quot;!DLROW OLLEH&quot;))))
- ▶ ToLower(ReadFile(&quot;/tmp/.tmpy4gMF0/in.txt&quot;, Modified))
-  → ReadFile(&quot;/tmp/.tmpy4gMF0/in.txt&quot;, Modified)
+ ✗ ReadFile(&quot;/tmp/.tmpo1faeE/in.txt&quot;, Modified) (old: Equals(Ok(String(&quot;HELLO WORLD!&quot;))) ≠ new: Equals(Ok(String(&quot;!DLROW OLLEH&quot;))))
+ ▶ ToLower(ReadFile(&quot;/tmp/.tmpo1faeE/in.txt&quot;, Modified))
+  → ReadFile(&quot;/tmp/.tmpo1faeE/in.txt&quot;, Modified)
   ← Ok(String(&quot;!DLROW OLLEH&quot;))
  ◀ Ok(String(&quot;!dlrow olleh&quot;))
 ← Ok(String(&quot;!dlrow olleh&quot;))
@@ -8890,19 +8890,7 @@ As long as the reserved task dependency is updated to a real <code>RequireTask</
   document.addEventListener('DOMContentLoaded', function () {
     let diff = String.raw`--- pie/src/tracker/writing.rs
 +++ pie/src/tracker/writing.rs
-@@ -28,11 +28,6 @@
-       indentation: 0,
-     }
-   }
--
--  /// Gets the writer of this writing tracker.
--  pub fn writer(&self) -> &W { &self.writer }
--  /// Gets the mutable writer of this writing tracker.
--  pub fn writer_mut(&mut self) -> &mut W { &mut self.writer }
- }
- 
- #[allow(dead_code)]
-@@ -125,6 +120,7 @@
+@@ -125,6 +125,7 @@
            _ => {}, // Other variants cannot occur.
          }
        }
@@ -9169,8 +9157,7 @@ We will not do that in this tutorial, but feel free to solve those issues (and w
 <p>You can <a href="3_min_sound/7_cycle/../../gen/3_min_sound/7_cycle/source.zip">download the source files up to this point</a>.</p>
 </div>
 </details>
-<p>This is currently the end of the guided programming tutorial.
-In the appendix chapters, we discuss PIE implementations and publications, related work, and future work.</p>
+<p>In the next chapter, we will implement a “parser development” application using PIE, which can do batch builds but also provides an interactive parser development environment, using a single set of tasks.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="example-interactive-parser-development"><a class="header" href="#example-interactive-parser-development">Example: Interactive Parser Development</a></h1>
 <p>To demonstrate what can be done with the programmatic incremental build system we just created, we will create a simple “interactive parser development” example.
 In this example, we can interactively develop a grammar for a new (programming) language, and test that grammar against several example files written in the new language.</p>
@@ -9706,6 +9693,12 @@ The <code>_</code> operator before <code>{</code> indicates that it is a <a href
 </code></pre>
 <p>Run the program with <code>cargo run --example parser_dev -- grammar.pest main test_1.txt test_2.txt</code>.
 This should result in a build log showing that the grammar is successfully compiled, that one file is successfully parsed, and that one file has a parse error.</p>
+<p>Unfortunately, there is no incrementality between different runs of the example, because the <code>Pie</code> <code>Store</code> is not persisted.
+The <code>Store</code> only exists in-memory while the program is running, and is then thrown away.
+Thus, there cannot be any incrementality.
+To get incrementality, we need to serialize the <code>Store</code> before the program exits, and deserialize it when the program starts.
+This is possible and not actually that hard, I just never got around to explaining it in this tutorial.
+See the <a href="4_example/index.html#side-note-serialization">Side Note: Serialization</a> section at the end for info on how this can be implemented.</p>
 <div id="admonition-hiding-the-build-log" class="admonition admonish-tip">
 <div class="admonition-title">
 <p>Hiding the Build Log</p>
@@ -9716,40 +9709,9 @@ This should result in a build log showing that the grammar is successfully compi
 Otherwise, you can hide the build log by replacing <code>WritingTracker::with_stderr()</code> with <code>NoopTracker</code>.</p>
 </div>
 </div>
-<details id="admonition-no-incrementality" class="admonition admonish-note">
-<summary class="admonition-title">
-<p>No Incrementality?</p>
-<p><a class="admonition-anchor-link" href="4_example/index.html#admonition-no-incrementality"></a></p>
-</summary>
-<div>
-<p>Unfortunately, there is no incrementality between different runs of the example, because the <code>Store</code> is not persisted.
-The <code>Store</code> only exists in-memory while the program is running, and is then thrown away.
-Thus, there cannot be any incrementality.</p>
-<p>To get incrementality, we need to serialize the <code>Store</code> before the program exits, and deserialize it when the program starts.
-This is possible and not actually that hard, I just never got around to implementing it in this tutorial.
-If you want some pointers to implement serialization for your PIE implementation, read on.</p>
-<p>The de-facto standard (and awesome) serialization library in Rust in <a href="https://serde.rs/" title="" target="_blank">serde</a>.
-See the <a href="https://github.com/Gohla/pie/blob/pre_type_refactor/pie/" title="" target="_blank">PIE in Rust repository at the <code>pre_type_refactor</code> tag</a> for a version of PIE with serde serialization.
-For example, the <a href="https://github.com/Gohla/pie/blob/pre_type_refactor/pie/src/store.rs#L14-L17" title="" target="_blank">
-<code>Store</code></a> struct has annotations for deriving <code>serde::Deserialize</code> and <code>serde::Serialize</code>.
-These attributes are somewhat convoluted due to serialization being optional, and due to the <code>H</code> generic type parameter which should not be included into serialization bounds.</p>
-<p>You should derive <code>serde::Deserialize</code> and <code>serde::Serialize</code> for all required types in the PIE library, but also all tasks, and all task outputs.
-The <code>pie_graph</code> library support serialization when the <code>serde</code> feature is enabled, which is enabled by default.
-Then, see <a href="https://github.com/Gohla/pie/blob/pre_type_refactor/pie/tests/serde.rs" title="" target="_blank">this serialization integration test</a>.</p>
-</div>
-</details>
 <p>Feel free to experiment a bit with the grammar, example files, etc. before continuing.
 We will develop an interactive editor next however, which will make experimentation easier!</p>
 <h2 id="interactive-parser-development"><a class="header" href="#interactive-parser-development">Interactive Parser Development</a></h2>
-<div id="admonition-under-construction" class="admonition admonish-warning">
-<div class="admonition-title">
-<p>Under Construction</p>
-<p><a class="admonition-anchor-link" href="4_example/index.html#admonition-under-construction"></a></p>
-</div>
-<div>
-<p>This subsection is under construction.</p>
-</div>
-</div>
 <p>Now we’ll create an interactive version of this grammar compilation and parsing pipeline, using <a href="https://ratatui.rs/" title="" target="_blank">Ratatui</a> to create a terminal GUI.
 Since we need to edit text files, we’ll use <a href="https://github.com/rhysd/tui-textarea" title="" target="_blank">tui-textarea</a>, which is a text editor widget for Ratatui.
 Ratatui works with multiple <a href="https://ratatui.rs/concepts/backends/" title="" target="_blank">backends</a>, with <a href="https://crates.io/crates/crossterm" title="" target="_blank">crossterm</a> being the default backend since it is cross-platform.
@@ -10124,7 +10086,9 @@ The layout can of course be tweaked, but it works for this example.</p>
 That’s exactly what we’re going to implement next.</p>
 <h3 id="drawing-and-updating-buffers"><a class="header" href="#drawing-and-updating-buffers">Drawing and Updating <code>Buffer</code>s</a></h3>
 <p>We’ll create <code>Buffers</code> in <code>Editor</code> and keep track of the active buffer.
-Modify <code>pie/examples/parser_dev/editor.rs</code>:</p>
+To keep this example simple, we’ll create buffers only for the grammar file and example program files given as command-line arguments.
+If you want more or less example files, you’ll have to exit the application, add those example files to the command-line arguments, and then start the application again.</p>
+<p>Modify <code>pie/examples/parser_dev/editor.rs</code>:</p>
 <div class="diff2html" id="diff2html_11"></div>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
@@ -10173,7 +10137,7 @@ Modify <code>pie/examples/parser_dev/editor.rs</code>:</p>
    }
  
    /// Run the editor, drawing it into an alternate screen of the terminal.
-@@ -47,13 +63,43 @@
+@@ -47,13 +63,42 @@
  
    fn draw_and_process_event<B: Backend>(&mut self, terminal: &mut Terminal<B>) -> Result<bool, io::Error> {
      terminal.draw(|frame| {
@@ -10190,21 +10154,20 @@ Modify <code>pie/examples/parser_dev/editor.rs</code>:</p>
 +      // Draw grammar buffer on the left (${"`"}buffer_areas[0]${"`"}).
 +      self.buffers[0].draw(frame, buffer_areas[0], self.active_buffer == 0);
 +
-+      { // Draw example program buffers on the right (${"`"}buffer_areas[1]${"`"}).
-+        let num_program_buffers = self.buffers.len() - 1;
-+        // Split vertical space between example program buffers.
-+        let program_buffer_areas = Layout::default()
-+          .direction(Direction::Vertical)
-+          .constraints(vec![Constraint::Ratio(1, num_program_buffers as u32); num_program_buffers])
-+          .split(buffer_areas[1]);
-+        for ((buffer, area), i) in self.buffers[1..].iter_mut().zip(program_buffer_areas.iter()).zip(1..) {
-+          buffer.draw(frame, *area, self.active_buffer == i);
-+        }
++      // Draw example program buffers on the right (${"`"}buffer_areas[1]${"`"}).
++      let num_program_buffers = self.buffers.len() - 1;
++      // Split vertical space between example program buffers.
++      let program_buffer_areas = Layout::default()
++        .direction(Direction::Vertical)
++        .constraints(vec![Constraint::Ratio(1, num_program_buffers as u32); num_program_buffers])
++        .split(buffer_areas[1]);
++      for ((buffer, area), i) in self.buffers[1..].iter_mut().zip(program_buffer_areas.iter()).zip(1..) {
++        buffer.draw(frame, *area, self.active_buffer == i);
 +      }
 +
 +      // Draw help line on the last line (${"`"}root_areas[1]${"`"}).
-+      let help = Paragraph::new("Interactive Parser Development. Press Esc to quit, ^T to switch active \
-+                                            buffer.");
++      let help = Paragraph::new("Interactive Parser Development. Press Esc to quit, ^T to switch the active \
++                                 buffer.");
 +      frame.render_widget(help, root_areas[1]);
      })?;
  
@@ -10243,12 +10206,300 @@ Then horizontally: half of the horizontal space is reserved for a grammar buffer
 The vertical space for program buffers (<code>program_buffer_areas</code>) is further divided: evenly split between all program buffers.</p>
 <p>Then, the buffers are drawn in the corresponding spaces with <code>active</code> only being <code>true</code> if we are drawing the active buffer, based on the <code>active_buffer</code> index.</p>
 <p>In the event processing code, we match the Control+T shortcut and increase the <code>active_buffer</code> index.
-We wrap back to 0 when the <code>active_buffer</code> index would overflow using a modulo (%) operator, ensuring that <code>active_buffer</code> is always a correct index into the <code>buffers</code> <code>Vec</code>.
+We wrap back to 0 when the <code>active_buffer</code> index would overflow, using a modulo (%) operator, ensuring that <code>active_buffer</code> is always a correct index into the <code>buffers</code> <code>Vec</code>.
 Finally, if none of the other shortcuts match, we send the event to the active buffer.</p>
 <p>Try out the code again with <code>cargo run --example parser_dev -- test.pest main test_1.test test_2.test -e</code> in a terminal.
 This should open up the application with a grammar buffer on the left, and two program buffers on the right.
 Use Control+T to swap between buffers, and escape to exit.</p>
 <h3 id="saving-buffers-and-providing-feedback"><a class="header" href="#saving-buffers-and-providing-feedback">Saving <code>Buffer</code>s and Providing Feedback</a></h3>
+<p>Next up is saving the buffers, running the compile grammar and parse tasks, and show feedback from those tasks in the feedback space of buffers.
+Modify <code>pie/examples/parser_dev/editor.rs</code>:</p>
+<div class="diff2html" id="diff2html_12"></div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    let diff = String.raw`--- pie/examples/parser_dev/editor.rs
++++ pie/examples/parser_dev/editor.rs
+@@ -1,3 +1,4 @@
++use std::fmt::Write;
+ use std::io;
+ 
+ use crossterm::event::{DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind, KeyModifiers};
+@@ -7,8 +8,11 @@
+ use ratatui::Terminal;
+ use ratatui::widgets::Paragraph;
+ 
++use pie::Pie;
++
+ use crate::Args;
+ use crate::editor::buffer::Buffer;
++use crate::task::{Outputs, Tasks};
+ 
+ mod buffer;
+ 
+@@ -16,6 +20,8 @@
+ pub struct Editor {
+   buffers: Vec<Buffer>,
+   active_buffer: usize,
++  rule_name: String,
++  pie: Pie<Tasks, Result<Outputs, String>>,
+ }
+ 
+ impl Editor {
+@@ -31,7 +37,9 @@
+       buffers.push(Buffer::new(path)?); // Subsequent buffers are always example program buffers.
+     }
+ 
+-    let editor = Self { buffers, active_buffer: 0, };
++    let pie = Pie::default();
++    let mut editor = Self { buffers, active_buffer: 0, rule_name: args.rule_name, pie };
++    editor.save_and_update_buffers(false);
+     Ok(editor)
+   }
+ 
+@@ -88,7 +96,7 @@
+ 
+       // Draw help line on the last line (${"`"}root_areas[1]${"`"}).
+       let help = Paragraph::new("Interactive Parser Development. Press Esc to quit, ^T to switch the active \
+-                                 buffer.");
++                                 buffer, ^S to save all buffers and provide feedback.");
+       frame.render_widget(help, root_areas[1]);
+     })?;
+ 
+@@ -98,9 +106,50 @@
+       Event::Key(key) if key.code == KeyCode::Char('t') && key.modifiers.contains(KeyModifiers::CONTROL) => {
+         self.active_buffer = (self.active_buffer + 1) % self.buffers.len();
+       }
++      Event::Key(key) if key.code == KeyCode::Char('s') && key.modifiers.contains(KeyModifiers::CONTROL) => {
++        self.save_and_update_buffers(true);
++      },
+       event => self.buffers[self.active_buffer].process_event(event), // Otherwise: forward to current buffer.
+     };
+ 
+     Ok(true)
+   }
++
++  fn save_and_update_buffers(&mut self, save: bool) {
++    for buffer in &mut self.buffers {
++      buffer.feedback_mut().clear();
++    }
++
++    if save {
++      for buffer in &mut self.buffers {
++        if let Err(error) = buffer.save_if_modified() {
++          // Ignore error: writing to String cannot fail.
++          let _ = writeln!(buffer.feedback_mut(), "Saving file failed: {}", error);
++        }
++      }
++    }
++
++    let mut session = self.pie.new_session();
++
++    let grammar_buffer = &mut self.buffers[0];
++    let compile_grammar_task = Tasks::compile_grammar(grammar_buffer.path());
++    match session.require(&compile_grammar_task) {
++      Err(error) => {
++        let _ = writeln!(grammar_buffer.feedback_mut(), "{}", error);
++        return; // Skip parsing if compiling grammar failed.
++      }
++      _ => {}
++    }
++
++    let compile_grammar_task = Box::new(compile_grammar_task);
++    for buffer in &mut self.buffers[1..] {
++      let task = Tasks::parse(&compile_grammar_task, buffer.path(), &self.rule_name);
++      let feedback = buffer.feedback_mut();
++      match session.require(&task) {
++        Err(error) => { let _ = writeln!(feedback, "{}", error); },
++        Ok(Outputs::Parsed(Some(output))) => { let _ = writeln!(feedback, "Parsing succeeded: {}", output); },
++        _ => {}
++      }
++    }
++  }
+ }
+`;
+    let target = document.getElementById('diff2html_12');
+    let configuration = {
+      drawFileList: false,
+      fileListToggle: false,
+      fileContentToggle: false,
+
+      outputFormat: 'side-by-side',
+      matching: 'lines',
+    };
+    let diff2htmlUi = new Diff2HtmlUI(target, diff, configuration, hljs);
+    diff2htmlUi.draw();
+  });
+</script>
+<p>The biggest addition as at the bottom: the <code>save_and_update_buffers</code> method.
+This method first clears the feedback text for all buffers, and saves all buffers (if <code>save</code> is <code>true</code>).
+Then we create a new PIE session and require the compile grammar task and parse tasks, similar to <code>compile_grammar_and_parse</code> in the main file.
+Here we instead <code>writeln!</code> the results to the feedback text of buffers.</p>
+<p>We store the <code>rule_name</code> in <code>Editor</code> as that is needed to create parse tasks, and store a <code>Pie</code> instance so that we can create new PIE sessions to require tasks.</p>
+<p>When the Control+S shortcut is pressed, we call <code>save_and_update_buffers</code> with <code>save</code> set to <code>true</code>.
+We also call <code>save_and_update_buffers</code> in <code>Editor::new</code> to provide feedback when the application starts out, but with <code>save</code> set to false, so we don’t immediately save all files.
+Finally, we update the help line to include the Control+S shortcut.</p>
+<p>Try out the code again with <code>cargo run --example parser_dev -- test.pest main test_1.test test_2.test -e</code> in a terminal.
+Now you should be able to make changes to the grammar and/or example programs, press Control+S to save modified files, and get feedback on grammar compilation and parsing example programs.
+If you like, you can go through the <a href="https://pest.rs/book/" title="" target="_blank">pest parser book</a> and experiment with/develop a parser.</p>
+<h3 id="showing-the-build-log"><a class="header" href="#showing-the-build-log">Showing the Build Log</a></h3>
+<p>We’ll add one more feature to the editor: showing the build log.
+We can do this by writing the build log to an in-memory text buffer, and by drawing that text buffer.
+Modify <code>pie/examples/parser_dev/editor.rs</code>:</p>
+<div class="diff2html" id="diff2html_13"></div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    let diff = String.raw`--- pie/examples/parser_dev/editor.rs
++++ pie/examples/parser_dev/editor.rs
+@@ -1,14 +1,17 @@
+ use std::fmt::Write;
+ use std::io;
++use std::io::Cursor;
+ 
+ use crossterm::event::{DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind, KeyModifiers};
+ use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
+ use ratatui::backend::{Backend, CrosstermBackend};
+ use ratatui::layout::{Constraint, Direction, Layout};
+ use ratatui::Terminal;
+-use ratatui::widgets::Paragraph;
++use ratatui::text::Text;
++use ratatui::widgets::{Block, Borders, Paragraph};
+ 
+ use pie::Pie;
++use pie::tracker::writing::WritingTracker;
+ 
+ use crate::Args;
+ use crate::editor::buffer::Buffer;
+@@ -21,7 +24,7 @@
+   buffers: Vec<Buffer>,
+   active_buffer: usize,
+   rule_name: String,
+-  pie: Pie<Tasks, Result<Outputs, String>>,
++  pie: Pie<Tasks, Result<Outputs, String>, WritingTracker<Cursor<Vec<u8>>>>,
+ }
+ 
+ impl Editor {
+@@ -37,7 +40,7 @@
+       buffers.push(Buffer::new(path)?); // Subsequent buffers are always example program buffers.
+     }
+ 
+-    let pie = Pie::default();
++    let pie = Pie::with_tracker(WritingTracker::new(Cursor::new(Vec::new())));
+     let mut editor = Self { buffers, active_buffer: 0, rule_name: args.rule_name, pie };
+     editor.save_and_update_buffers(false);
+     Ok(editor)
+@@ -73,7 +76,7 @@
+     terminal.draw(|frame| {
+       let root_areas = Layout::default()
+         .direction(Direction::Vertical)
+-        .constraints(vec![Constraint::Percentage(100), Constraint::Min(1)])
++        .constraints(vec![Constraint::Percentage(70), Constraint::Percentage(30), Constraint::Min(1)])
+         .split(frame.size());
+       let buffer_areas = Layout::default()
+         .direction(Direction::Horizontal)
+@@ -94,10 +97,26 @@
+         buffer.draw(frame, *area, self.active_buffer == i);
+       }
+ 
+-      // Draw help line on the last line (${"`"}root_areas[1]${"`"}).
++      { // Draw build log on the bottom (${"`"}root_areas[1]${"`"}).
++        let text = Text::raw(String::from_utf8_lossy(&self.pie.tracker().writer().get_ref()));
++
++        // Scroll down to last line, but that hides the entire build log.
++        let scroll = text.height() as u16;
++        // Scroll up the height of the build log area, making it visible. Use saturating sub to prevent overflows.
++        let scroll = scroll.saturating_sub(root_areas[1].height);
++        // Scroll down 2 lines due to the top and bottom border taking up 2 lines.
++        let scroll = scroll + 2;
++
++        let build_log = Paragraph::new(text)
++          .block(Block::default().title("Build log").borders(Borders::ALL))
++          .scroll((scroll, 0));
++        frame.render_widget(build_log, root_areas[1]);
++      };
++
++      // Draw help line on the last line (${"`"}root_areas[2]${"`"}).
+       let help = Paragraph::new("Interactive Parser Development. Press Esc to quit, ^T to switch the active \
+                                  buffer, ^S to save all buffers and provide feedback.");
+-      frame.render_widget(help, root_areas[1]);
++      frame.render_widget(help, root_areas[2]);
+     })?;
+ 
+     match crossterm::event::read()? {
+`;
+    let target = document.getElementById('diff2html_13');
+    let configuration = {
+      drawFileList: false,
+      fileListToggle: false,
+      fileContentToggle: false,
+
+      outputFormat: 'side-by-side',
+      matching: 'lines',
+    };
+    let diff2htmlUi = new Diff2HtmlUI(target, diff, configuration, hljs);
+    diff2htmlUi.draw();
+  });
+</script>
+<p>In <code>new</code> we now create the <code>Pie</code> instance with a writing tracker: <code>WritingTracker::new(Cursor::new(Vec::new()))</code>.
+This writing tracker writes to a <a href="https://doc.rust-lang.org/std/io/struct.Cursor.html" title="" target="_blank">
+<code>Cursor</code></a>, specifically <code>Cursor&lt;Vec&lt;u8&gt;&gt;</code> for which <a href="https://doc.rust-lang.org/src/std/io/cursor.rs.html#570-591" title="" target="_blank">
+<code>Write</code> is implemented</a>.
+We modify the type of the <code>pie</code> field to include the tracker type to reflect this: <code>WritingTracker&lt;Cursor&lt;Vec&lt;u8&gt;&gt;&gt;</code>.
+Build logs will then be written to the <code>Vec&lt;u8&gt;</code> inside the <code>Cursor</code>.</p>
+<p>To draw the build log in between the buffers and help line, we first modify the layout split into <code>root_areas</code>: buffers now take up 70% of vertical space, and add a new constraint for the build log which takes 30% of vertical space.</p>
+<p>We access the in-memory buffer via <code>&amp;self.pie.tracker().writer().get_ref()</code>, convert this to a string via <a href="https://doc.rust-lang.org/std/string/struct.String.html#method.from_utf8_lossy" title="" target="_blank">
+<code>String::from_utf8_lossy</code></a>, and convert that to <a href="https://docs.rs/ratatui/latest/ratatui/text/struct.Text.html" title="" target="_blank">Ratatui <code>Text</code></a> which can be passed to <a href="https://docs.rs/ratatui/latest/ratatui/widgets/struct.Paragraph.html#method.new" title="" target="_blank">
+<code>Paragraph::new</code></a> and also gives us line information for scrolling the build log.
+The scroll calculation is explained in the comments.
+We then draw the build log as a <code>Paragraph</code>.</p>
+<p>Finally, we update the area for the help line from <code>root_areas[1]</code> to <code>root_areas[2]</code>, as adding the layout constraint shifted the index up.</p>
+<p>Try out the code again with <code>cargo run --example parser_dev -- test.pest main test_1.test test_2.test -e</code> in a terminal.
+Pressing Control+S causes tasks to be required, which is shown in the build log.
+Try modifying a single file to see what tasks PIE executes, or what the effect of an error in the grammar has.</p>
+<p>And with that, we’re done with the interactive parser development example 🎉🎉🎉!</p>
+<h2 id="conclusion"><a class="header" href="#conclusion">Conclusion</a></h2>
+<p>In this example, we developed tasks for compiling a grammar and parsing files with that grammar, and then used those tasks to implement both a batch build, and an interactive parser development environment.</p>
+<p>In the introduction, we <a href="4_example/../0_intro/index.html#motivation">motivated</a> programmatic incremental build systems with the key properties of: programmatic, incremental, correct, automatic, and multipurpose.
+Did these properties help with the implementation of this example application?</p>
+<ul>
+<li>Programmatic: due to the build script – that is: the compile grammar and parse tasks – being written in the same programming language as the application, it was extremely simple to integrate. We also didn’t have to learn a separate language, we could just apply our knowledge of Rust!</li>
+<li>Incremental: PIE incrementalized the build for us, so we didn’t have to implement incrementality.
+<ul>
+<li>The batch build is unfortunately not incremental due to not having implemented serialization in this tutorial, but this is not a fundamental limitation. See <a href="4_example/index.html#side-note-serialization">Side Note: Serialization</a> for info on how to solve this.</li>
+</ul>
+</li>
+<li>Correct: PIE ensures the build is correct, so we don’t have to worry about glitches or inconsistent data.
+<ul>
+<li>For a real application, we should write tests to increase the confidence that our build is correct, because PIE checks for correctness at runtime.</li>
+</ul>
+</li>
+<li>Automatic: we didn’t manually implement incrementality, but only specified the dependencies: from compile grammar/parse task to a file, and from parse tasks to compile grammar tasks. This saves development time that would be spent on incrementalization and making sure that it is correct. For larger applications, this can end up saving a lot of development time.</li>
+<li>Multipurpose: we reused the same tasks for both a batch build and for use in an interactive environment, without any modifications. Again, this saves development time.</li>
+</ul>
+<p>So yes, I think programmatic incremental build systems, and in particular PIE, help a lot when developing these kind of applications.
+In larger applications, the benefits can be even larger, due to saving more development time.</p>
+<p>You should of course decide for yourself whether PIE really helped with implementing this example.
+Every problem is different, and requires separate considerations as to what tools are the best for solving that particular problem.</p>
+<p>This is currently the end of the guided programming tutorial.
+In the appendix chapters, we discuss PIE implementations and publications, related work, and future work.</p>
+<details id="admonition-download-source-code" class="admonition admonish-example">
+<summary class="admonition-title">
+<p>Download source code</p>
+<p><a class="admonition-anchor-link" href="4_example/index.html#admonition-download-source-code"></a></p>
+</summary>
+<div>
+<p>You can <a href="4_example/../../gen/4_example/source.zip">download the source files up to this point</a>.</p>
+</div>
+</details>
+<h2 id="side-note-serialization"><a class="header" href="#side-note-serialization">Side Note: Serialization</a></h2>
+<p>To get incrementality between different runs (i.e., processes) of the program, we need to serialize the <code>Store</code> before the program exits, and deserialize the <code>Store</code> when the program starts.</p>
+<p>The de-facto standard (and awesome) serialization library in Rust in <a href="https://serde.rs/" title="" target="_blank">serde</a>.
+See the <a href="https://github.com/Gohla/pie/blob/pre_type_refactor/pie/" title="" target="_blank">PIE in Rust repository at the <code>pre_type_refactor</code> tag</a> for a version of PIE with serde serialization.
+For example, the <a href="https://github.com/Gohla/pie/blob/pre_type_refactor/pie/src/store.rs#L14-L17" title="" target="_blank">
+<code>Store</code></a> struct has annotations for deriving <code>serde::Deserialize</code> and <code>serde::Serialize</code>.
+These attributes are somewhat convoluted due to serialization being optional, and due to the <code>H</code> generic type parameter which should not be included into serialization bounds.</p>
+<p>You should derive <code>serde::Deserialize</code> and <code>serde::Serialize</code> for all required types in the PIE library, but also all tasks, and all task outputs.
+The <code>pie_graph</code> library support serialization when the <code>serde</code> feature is enabled, which is enabled by default.
+Then, see <a href="https://github.com/Gohla/pie/blob/pre_type_refactor/pie/tests/serde.rs" title="" target="_blank">this serialization integration test</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="pie-implementations--publications"><a class="header" href="#pie-implementations--publications">PIE Implementations &amp; Publications</a></h1>
 <h2 id="implementations"><a class="header" href="#implementations">Implementations</a></h2>
 <p>In this tutorial, you implemented a large part of the PIE, the programmatic incremental build system that I developed during my PhD and Postdoc.
