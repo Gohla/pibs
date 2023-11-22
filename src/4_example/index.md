@@ -243,24 +243,76 @@ The `pie_graph` library support serialization when the `serde` feature is enable
 Then, see [this serialization integration test](https://github.com/Gohla/pie/blob/pre_type_refactor/pie/tests/serde.rs).
 ```
 
-Feel free to experiment with the grammar, example files, etc. before continuing!
+Feel free to experiment a bit with the grammar, example files, etc. before continuing.
+We will develop an interactive editor next however, which will make experimentation easier!
 
-## Editor
+## Interactive Parser Development
 
 ```admonish warning title="Under Construction"
 This subsection is under construction.
 ```
 
-[//]: # (add dev-deps)
+Now we'll create an interactive version of this grammar compilation and parsing pipeline, using [Ratatui](https://ratatui.rs/) to create a terminal GUI.
+Since we need to edit text files, we'll use [tui-textarea](https://github.com/rhysd/tui-textarea), which is a text editor widget for Ratatui.
+Ratatui works with multiple [backends](https://ratatui.rs/concepts/backends/), with [crossterm](https://crates.io/crates/crossterm) being the default backend since it is cross-platform.
+Add these libraries as a dependency to `pie/Cargo.toml`:
 
-[//]: # ()
-[//]: # (create `pie/examples/parser_dev/editor.rs`)
+```diff2html linebyline
+{{#include ../gen/4_example/d_1_Cargo.toml.diff}}
+```
 
-[//]: # ()
-[//]: # (`Editor` `new` `draw_and_process_event` `run`)
+### Ratatui Scaffolding
 
-[//]: # ()
-[//]: # (add editor arg to `Cli` and run editor instead)
+We will put the editor in a separate module, and start out with the basic scaffolding of a Ratatui "Hello World" application.
+Add `editor` as a public module to `pie/examples/parser_dev/main.rs`:
+
+```diff2html linebyline
+{{#include ../gen/4_example/d_2_main_editor.rs.diff}}
+```
+
+Create the `pie/examples/parser_dev/editor.rs` file and add the following to it:
+
+```rust,
+{{#include d_3_editor.rs}}
+```
+
+The `Editor` struct will hold the state of the editor application, which is currently empty, but we'll add fields to it later.
+Likewise, the `new` function doesn't do a lot right now, but it is scaffolding for when we add state.
+It returns a `Result` because it can fail in the future.
+
+The `run` method sets up the terminal for GUI rendering, draws the GUI and processes events in a loop until stopped, and then undoes our changes to the terminal.
+It is set up in such a way that undoing our changes to the terminal happens regardless if there is an error or not (although panics would still skip that code and leave the terminal in a bad state).
+This is a [standard program loop for Ratatui](https://ratatui.rs/tutorial/hello-world/index.html).
+
+```admonish tip title="Rust Help: Returning From Loops" collapsible=true
+A [`loop` indicates an infinite loop](https://doc.rust-lang.org/book/ch03-05-control-flow.html#repeating-code-with-loop).
+You can [return a value from such loops with `break`](https://doc.rust-lang.org/book/ch03-05-control-flow.html#returning-values-from-loops).
+```
+
+The `draw_and_process_event` method first draws the GUI, currently just a hello world message, and then processes events such as key presses.
+Currently, this skips key releases because we are only interested in presses, and returns `Ok(false)` if escape is pressed, causing the `loop` to be `break`ed out.
+
+Now we need to go back to our command-line argument parsing and add a flag indicating that we want to start up an interactive editor.
+Modify `pie/examples/parser_dev/main.rs`:
+
+```diff2html
+{{#include ../gen/4_example/d_4_main_cli.rs.diff}}
+```
+
+We add a new `Cli` struct with an `edit` field that is settable by a short (`-e`) or long (`--edit`) flag, and flatten `Args` into it.
+Using this new `Cli` struct here keeps `Args` clean, since the existing code does not need to know about the `edit` flag.
+Instead of using a flag, you could also define a [separate command](https://docs.rs/clap/latest/clap/_derive/_tutorial/chapter_0/index.html) for editing.
+
+In `main`, we parse `Cli` instead, check whether `cli.edit` is set, and create and run the editor if it is.
+Otherwise, we do a batch build.
+
+Try out the code with `cargo run --example parser_dev -- test.pest main test_1.test test_2.test -e` in a terminal, which should open up a separate screen with a hello world text.
+Press escape to exit out of the application.
+
+If the program ever panics, your terminal will be left in a bad state.
+In that case, you'll have to reset your terminal back to a good state, or restart your terminal.
+
+### Text Editing
 
 [//]: # ()
 [//]: # (run)

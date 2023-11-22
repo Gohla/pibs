@@ -10,6 +10,7 @@ use crate::task::{Outputs, Tasks};
 
 pub mod parse;
 pub mod task;
+pub mod editor;
 
 #[derive(Parser)]
 pub struct Args {

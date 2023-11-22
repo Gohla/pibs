@@ -1,4 +1,5 @@
 use std::fmt::Write;
+use std::io;
 use std::path::PathBuf;
 
 use clap::Parser;
@@ -6,10 +7,21 @@ use clap::Parser;
 use pie::Pie;
 use pie::tracker::writing::WritingTracker;
 
+use crate::editor::Editor;
 use crate::task::{Outputs, Tasks};
 
 pub mod parse;
 pub mod task;
+pub mod editor;
+
+#[derive(Parser)]
+struct Cli {
+  /// Start an interactive parser development editor.
+  #[arg(short, long)]
+  edit: bool,
+  #[command(flatten)]
+  args: Args,
+}
 
 #[derive(Parser)]
 pub struct Args {
@@ -21,9 +33,15 @@ pub struct Args {
   program_file_paths: Vec<PathBuf>,
 }
 
-fn main() {
-  let args = Args::parse();
-  compile_grammar_and_parse(args);
+fn main() -> Result<(), io::Error> {
+  let cli = Cli::parse();
+  if cli.edit {
+    let mut editor = Editor::new(cli.args)?;
+    editor.run()
+  } else {
+    compile_grammar_and_parse(cli.args);
+    Ok(())
+  }
 }
 
 fn compile_grammar_and_parse(args: Args) {

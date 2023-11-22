@@ -440,5 +440,12 @@ pub fn step_all(
       add("c_4_test_1.txt", "test_1.txt"),
       add("c_4_test_2.txt", "test_2.txt"),
     ]);
+
+    stepper.apply([
+      create_diff_from_destination_file("d_1_Cargo.toml", "pie/Cargo.toml"),
+      create_diff_from_destination_file("d_2_main_editor.rs", "pie/examples/parser_dev/main.rs"),
+      add("d_3_editor.rs", "pie/examples/parser_dev/editor.rs"),
+      create_diff_from_destination_file("d_4_main_cli.rs", "pie/examples/parser_dev/main.rs"),
+    ]);
   });
 }
