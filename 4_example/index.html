@@ -972,7 +972,287 @@ Otherwise, we do a batch build.</p>
 Press escape to exit out of the application.</p>
 <p>If the program ever panics, your terminal will be left in a bad state.
 In that case, you’ll have to reset your terminal back to a good state, or restart your terminal.</p>
-<h3 id="text-editing"><a class="header" href="#text-editing">Text Editing</a></h3>
+<h3 id="text-editor-buffer"><a class="header" href="#text-editor-buffer">Text Editor <code>Buffer</code></a></h3>
+<p>The goal of this application is to develop a grammar alongside example programs of that grammar, getting feedback whether the grammar is correct, but also getting feedback whether the example programs can be parsed with the grammar.
+Therefore, we will need to draw multiple text editors along with space for feedback, and be able to swap between active editors.
+This will be the responsibility of the <code>Buffer</code> struct which we will create in a separate module.
+Add the <code>buffer</code> module to <code>pie/examples/parser_dev/editor.rs</code>:</p>
+<div class="diff2html" id="diff2html_10"></div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    let diff = String.raw`--- pie/examples/parser_dev/editor.rs
++++ pie/examples/parser_dev/editor.rs
+@@ -8,6 +8,8 @@
+ 
+ use crate::Args;
+ 
++mod buffer;
++
+ /// Live parser development editor.
+ pub struct Editor {}
+ 
+`;
+    let target = document.getElementById('diff2html_10');
+    let configuration = {
+      drawFileList: false,
+      fileListToggle: false,
+      fileContentToggle: false,
+
+      outputFormat: 'side-by-side',
+      matching: 'lines',
+    };
+    let diff2htmlUi = new Diff2HtmlUI(target, diff, configuration, hljs);
+    diff2htmlUi.draw();
+  });
+</script>
+<p>Then create the <code>pie/examples/parser_dev/editor/buffer.rs</code> file and add to it:</p>
+<pre><code class="language-rust ">#![allow(dead_code)]
+
+use std::fs::{File, read_to_string};
+use std::io::{self, Write};
+use std::path::PathBuf;
+
+use crossterm::event::Event;
+use ratatui::Frame;
+use ratatui::layout::{Constraint, Direction, Layout, Rect};
+use ratatui::style::{Color, Modifier, Style};
+use ratatui::widgets::{Block, Borders, Paragraph, Wrap};
+use tui_textarea::TextArea;
+
+/// Editable text buffer for a file.
+pub struct Buffer {
+  path: PathBuf,
+  editor: TextArea&lt;'static&gt;,
+  feedback: String,
+  modified: bool,
+}
+
+impl Buffer {
+  /// Create a new [`Buffer`] for file at `path`.
+  ///
+  /// # Errors
+  ///
+  /// Returns an error when reading file at `path` fails.
+  pub fn new(path: PathBuf) -&gt; Result&lt;Self, io::Error&gt; {
+    let text = read_to_string(&amp;path)?;
+    let mut editor = TextArea::from(text.lines());
+
+    // Enable line numbers. Default style = no additional styling (inherit).
+    editor.set_line_number_style(Style::default());
+
+    Ok(Self { path, editor, feedback: String::default(), modified: false })
+  }
+
+  /// Draws this buffer with `frame` into `area`, highlighting it if it is `active`.
+  pub fn draw(&amp;mut self, frame: &amp;mut Frame, area: Rect, active: bool) {
+    // Determine and set styles based on whether this buffer is active. Default style = no additional styling (inherit).
+    let mut cursor_line_style = Style::default();
+    let mut cursor_style = Style::default();
+    let mut block_style = Style::default();
+    if active { // Highlight active editor.
+      cursor_line_style = cursor_line_style.add_modifier(Modifier::UNDERLINED);
+      cursor_style = cursor_style.add_modifier(Modifier::REVERSED);
+      block_style = block_style.fg(Color::Gray);
+    }
+    self.editor.set_cursor_line_style(cursor_line_style);
+    self.editor.set_cursor_style(cursor_style);
+
+    // Create and set the block for the text editor, bordering it and providing a title.
+    let mut block = Block::default().borders(Borders::ALL).style(block_style);
+    if let Some(file_name) = self.path.file_name() { // Add file name as title.
+      block = block.title(format!(&quot;{}&quot;, file_name.to_string_lossy()))
+    }
+    if self.modified { // Add modified to title.
+      block = block.title(&quot;[modified]&quot;);
+    }
+    self.editor.set_block(block);
+
+    // Split area up into a text editor (80% of available space), and feedback text (minimum of 7 lines).
+    let areas = Layout::default()
+      .direction(Direction::Vertical)
+      .constraints(vec![Constraint::Percentage(80), Constraint::Min(7)])
+      .split(area);
+    // Render text editor into first area (`areas[0]`).
+    frame.render_widget(self.editor.widget(), areas[0]);
+    // Render feedback text into second area (`areas[1]`).
+    let feedback = Paragraph::new(self.feedback.clone())
+      .wrap(Wrap::default())
+      .block(Block::default().style(block_style).borders(Borders::ALL - Borders::TOP));
+    frame.render_widget(feedback, areas[1]);
+  }
+
+  /// Process `event`, updating whether this buffer is modified.
+  pub fn process_event(&amp;mut self, event: Event) {
+    self.modified |= self.editor.input(event);
+  }
+
+  /// Save this buffer to its file if it is modified. Does nothing if not modified. Sets as unmodified when successful.
+  ///
+  /// # Errors
+  ///
+  /// Returns an error if writing buffer text to the file fails.
+  pub fn save_if_modified(&amp;mut self) -&gt; Result&lt;(), io::Error&gt; {
+    if !self.modified {
+      return Ok(());
+    }
+    let mut file = io::BufWriter::new(File::create(&amp;self.path)?);
+    for line in self.editor.lines() {
+      file.write_all(line.as_bytes())?;
+      file.write_all(b&quot;\n&quot;)?;
+    }
+    file.flush()?;
+    self.modified = false;
+    Ok(())
+  }
+
+  /// Gets the file path of this buffer.
+  pub fn path(&amp;self) -&gt; &amp;PathBuf { &amp;self.path }
+
+  /// Gets the mutable feedback text of this buffer.
+  pub fn feedback_mut(&amp;mut self) -&gt; &amp;mut String { &amp;mut self.feedback }
+}</code></pre>
+<p>A <code>Buffer</code> is a text editor for a text file at a certain <code>path</code>.
+It keeps track of a text editor with <code>TextArea&lt;'static&gt;</code>, <code>feedback</code> text, and whether the text was <code>modified</code> in relation to the file.
+<code>new</code> creates a <code>Buffer</code> and is fallible due to reading a file.</p>
+<p>The <code>draw</code> method draws/renders the buffer (using the Ratatui <code>frame</code>) into <code>area</code>, with <code>active</code> signifying that this buffer is active and should be highlighted differently.
+The first part sets the style of the editor, mainly highlighting an active editor by using <code>Color::Gray</code> as the block style.
+Default styles indicate that no additional styling is done, basically inheriting the style from a parent widget (i.e., a block), or using the style from your terminal.
+The second part creates a <a href="https://ratatui.rs/how-to/widgets/block.html" title="" target="_blank">block</a> that renders a border around the text editor and renders a title on the upper border.
+The third part splits up the available space into space for the text editor (80%), and space for the feedback text (at least 7 lines), and renders the text editor and feedback text into those spaces.
+The layout can of course be tweaked, but it works for this example.</p>
+<p><code>process_event</code> lets the text editor process input events, and updates whether the text has been modified.
+<code>save_if_modified</code> saves the text to file, but only if modified.
+<code>path</code> gets the file path of the buffer.
+<code>feedback_mut</code> returns a mutable borrow to the feedback text, enabling modification of the feedback text.</p>
+<p>It is up to the user of <code>Buffer</code> to keep track of the active buffer, sending <code>active: true</code> to the <code>draw</code> method of that buffer, and calling <code>process_event</code> on the active buffer.
+That’s exactly what we’re going to implement next.</p>
+<h3 id="drawing-and-updating-buffers"><a class="header" href="#drawing-and-updating-buffers">Drawing and Updating <code>Buffer</code>s</a></h3>
+<p>We’ll create <code>Buffers</code> in <code>Editor</code> and keep track of the active buffer.
+Modify <code>pie/examples/parser_dev/editor.rs</code>:</p>
+<div class="diff2html" id="diff2html_11"></div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    let diff = String.raw`--- pie/examples/parser_dev/editor.rs
++++ pie/examples/parser_dev/editor.rs
+@@ -1,22 +1,38 @@
+ use std::io;
+ 
+-use crossterm::event::{DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind};
++use crossterm::event::{DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind, KeyModifiers};
+ use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
+ use ratatui::backend::{Backend, CrosstermBackend};
++use ratatui::layout::{Constraint, Direction, Layout};
+ use ratatui::Terminal;
+ use ratatui::widgets::Paragraph;
+ 
+ use crate::Args;
++use crate::editor::buffer::Buffer;
+ 
+ mod buffer;
+ 
+ /// Live parser development editor.
+-pub struct Editor {}
++pub struct Editor {
++  buffers: Vec<Buffer>,
++  active_buffer: usize,
++}
+ 
+ impl Editor {
+   /// Create a new editor from ${"`"}args${"`"}.
+-  pub fn new(_args: Args) -> Result<Self, io::Error> {
+-    Ok(Self {})
++  ///
++  /// # Errors
++  ///
++  /// Returns an error when creating a buffer fails.
++  pub fn new(args: Args) -> Result<Self, io::Error> {
++    let mut buffers = Vec::with_capacity(1 + args.program_file_paths.len());
++    buffers.push(Buffer::new(args.grammar_file_path)?); // First buffer is always the grammar buffer.
++    for path in args.program_file_paths {
++      buffers.push(Buffer::new(path)?); // Subsequent buffers are always example program buffers.
++    }
++
++    let editor = Self { buffers, active_buffer: 0, };
++    Ok(editor)
+   }
+ 
+   /// Run the editor, drawing it into an alternate screen of the terminal.
+@@ -47,13 +63,43 @@
+ 
+   fn draw_and_process_event<B: Backend>(&mut self, terminal: &mut Terminal<B>) -> Result<bool, io::Error> {
+     terminal.draw(|frame| {
+-      frame.render_widget(Paragraph::new("Hello World! Press Esc to exit."), frame.size());
++      let root_areas = Layout::default()
++        .direction(Direction::Vertical)
++        .constraints(vec![Constraint::Percentage(100), Constraint::Min(1)])
++        .split(frame.size());
++      let buffer_areas = Layout::default()
++        .direction(Direction::Horizontal)
++        .constraints(vec![Constraint::Percentage(50), Constraint::Percentage(50)])
++        .split(root_areas[0]);
++
++      // Draw grammar buffer on the left (${"`"}buffer_areas[0]${"`"}).
++      self.buffers[0].draw(frame, buffer_areas[0], self.active_buffer == 0);
++
++      { // Draw example program buffers on the right (${"`"}buffer_areas[1]${"`"}).
++        let num_program_buffers = self.buffers.len() - 1;
++        // Split vertical space between example program buffers.
++        let program_buffer_areas = Layout::default()
++          .direction(Direction::Vertical)
++          .constraints(vec![Constraint::Ratio(1, num_program_buffers as u32); num_program_buffers])
++          .split(buffer_areas[1]);
++        for ((buffer, area), i) in self.buffers[1..].iter_mut().zip(program_buffer_areas.iter()).zip(1..) {
++          buffer.draw(frame, *area, self.active_buffer == i);
++        }
++      }
++
++      // Draw help line on the last line (${"`"}root_areas[1]${"`"}).
++      let help = Paragraph::new("Interactive Parser Development. Press Esc to quit, ^T to switch active \
++                                            buffer.");
++      frame.render_widget(help, root_areas[1]);
+     })?;
+ 
+     match crossterm::event::read()? {
+       Event::Key(key) if key.kind == KeyEventKind::Release => return Ok(true), // Skip releases.
+       Event::Key(key) if key.code == KeyCode::Esc => return Ok(false),
+-      _ => {}
++      Event::Key(key) if key.code == KeyCode::Char('t') && key.modifiers.contains(KeyModifiers::CONTROL) => {
++        self.active_buffer = (self.active_buffer + 1) % self.buffers.len();
++      }
++      event => self.buffers[self.active_buffer].process_event(event), // Otherwise: forward to current buffer.
+     };
+ 
+     Ok(true)
+`;
+    let target = document.getElementById('diff2html_11');
+    let configuration = {
+      drawFileList: false,
+      fileListToggle: false,
+      fileContentToggle: false,
+
+      outputFormat: 'side-by-side',
+      matching: 'lines',
+    };
+    let diff2htmlUi = new Diff2HtmlUI(target, diff, configuration, hljs);
+    diff2htmlUi.draw();
+  });
+</script>
+<p><code>Editor</code> now has a list of <code>buffers</code> via <code>Vec&lt;Buffer&gt;</code> and keeps track of the active tracker via <code>active_buffer</code> which is an index into <code>buffers</code>.
+In <code>new</code>, we create buffers based on the grammar and program file paths in <code>args</code>.
+The buffers <code>Vec</code> is created in such a way that the first buffer is always the grammar buffer, with the rest being example program buffers.
+The grammar buffer always exists because <code>args.grammar_file_path</code> is mandatory, but there can be 0 or more example program buffers.</p>
+<p><code>draw_and_process_event</code> now splits up the available space.
+First vertically: as much space as possible is reserved for buffers, with at least 1 line being reserved for a help line at the bottom.
+Then horizontally: half of the horizontal space is reserved for a grammar buffer, and the other half for program buffers.
+The vertical space for program buffers (<code>program_buffer_areas</code>) is further divided: evenly split between all program buffers.</p>
+<p>Then, the buffers are drawn in the corresponding spaces with <code>active</code> only being <code>true</code> if we are drawing the active buffer, based on the <code>active_buffer</code> index.</p>
+<p>In the event processing code, we match the Control+T shortcut and increase the <code>active_buffer</code> index.
+We wrap back to 0 when the <code>active_buffer</code> index would overflow using a modulo (%) operator, ensuring that <code>active_buffer</code> is always a correct index into the <code>buffers</code> <code>Vec</code>.
+Finally, if none of the other shortcuts match, we send the event to the active buffer.</p>
+<p>Try out the code again with <code>cargo run --example parser_dev -- test.pest main test_1.test test_2.test -e</code> in a terminal.
+This should open up the application with a grammar buffer on the left, and two program buffers on the right.
+Use Control+T to swap between buffers, and escape to exit.</p>
+<h3 id="saving-buffers-and-providing-feedback"><a class="header" href="#saving-buffers-and-providing-feedback">Saving <code>Buffer</code>s and Providing Feedback</a></h3>
 
                     </main>
 

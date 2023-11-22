@@ -1,0 +1,11 @@
+--- pie/examples/parser_dev/editor.rs
++++ pie/examples/parser_dev/editor.rs
+@@ -8,6 +8,8 @@
+ 
+ use crate::Args;
+ 
++mod buffer;
++
+ /// Live parser development editor.
+ pub struct Editor {}
+ 
