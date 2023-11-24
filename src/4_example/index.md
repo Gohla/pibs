@@ -245,6 +245,14 @@ Add these libraries as a dependency to `pie/Cargo.toml`:
 {{#include ../gen/4_example/d_1_Cargo.toml.diff}}
 ```
 
+We continue as follows:
+
+1) Set up the scaffolding for a Ratatui application.
+2) Create a text editor `Buffer` using tui-textarea to edit the grammar and example program files.
+3) Draw and update those text editor `Buffer`s, and keep track of the active buffer.
+4) Save `Buffer`s back to files and run the `CompileGrammar` and `Parse` tasks to provide feedback on the grammar and example programs.
+5) Show the build log in the application.
+
 ### Ratatui Scaffolding
 
 We will put the editor in a separate module, and start out with the basic scaffolding of a Ratatui "Hello World" application.
@@ -425,18 +433,24 @@ In the introduction, we [motivated](../0_intro/index.md#motivation) programmatic
 Did these properties help with the implementation of this example application?
 
 - Programmatic: due to the build script -- that is: the compile grammar and parse tasks -- being written in the same programming language as the application, it was extremely simple to integrate. We also didn't have to learn a separate language, we could just apply our knowledge of Rust!
-- Incremental: PIE incrementalized the build for us, so we didn't have to implement incrementality.
+- Incremental: PIE incrementalized the build for us, so we didn't have to implement incrementality. This saves a lot of development effort as implemented incrementality is complicated. 
   - The batch build is unfortunately not incremental due to not having implemented serialization in this tutorial, but this is not a fundamental limitation. See [Side Note: Serialization](#side-note-serialization) for info on how to solve this.
-- Correct: PIE ensures the build is correct, so we don't have to worry about glitches or inconsistent data.
+- Correct: PIE ensures the build is correct, so we don't have to worry about glitches or inconsistent data, again saving development effort that would otherwise be spent on ensuring incrementality is correct.
   - For a real application, we should write tests to increase the confidence that our build is correct, because PIE checks for correctness at runtime.
-- Automatic: we didn't manually implement incrementality, but only specified the dependencies: from compile grammar/parse task to a file, and from parse tasks to compile grammar tasks. This saves development time that would be spent on incrementalization and making sure that it is correct. For larger applications, this can end up saving a lot of development time.
+- Automatic: we didn't manually implement incrementality, but only specified the dependencies: from compile grammar/parse task to a file, and from parse tasks to compile grammar tasks.
 - Multipurpose: we reused the same tasks for both a batch build and for use in an interactive environment, without any modifications. Again, this saves development time.
 
-So yes, I think programmatic incremental build systems, and in particular PIE, help a lot when developing these kind of applications.
-In larger applications, the benefits can be even larger, due to saving more development time.
+So yes, I think that programmatic incremental build systems -- and in particular PIE -- help a lot when developing applications that require incremental batch builds or interactive pipelines, and especially when both are required.
+The main benefit is reduced development effort, due to not having to solve the problem of correct incrementality, due to easy integration, and due to only needing to know and use a single programming language.
 
-You should of course decide for yourself whether PIE really helped with implementing this example.
-Every problem is different, and requires separate considerations as to what tools are the best for solving that particular problem.
+Larger applications with more features and complications that need incrementality would require an even bigger implementation effort.
+Therefore, larger applications could benefit even more from using PIE.
+Of course, you cannot really extrapolate that from this small example.
+However, I have applied PIE to a larger application: the Spoofax Language Workbench, and found similar benefits. 
+More info on this [can be found in the appendix](../a_appendix/1_pie.md#implementations).
+
+You should of course decide for yourself whether a programmatic incremental build system really helped with implementing this example.
+Every problem is different, and requires separate consideration as to what tools best solve a particular problem.
 
 This is currently the end of the guided programming tutorial.
 In the appendix chapters, we discuss PIE implementations and publications, related work, and future work.
