@@ -55,15 +55,16 @@ However, filesystem tracing is also not fully cross-platform and bulletproof, so
 Again, if a cross-platform and bulletproof filesystem tracing library exists, it would be extremely useful for programmatic incremental build systems.
 ```
 
-#### Sessions
+#### The Ever-Changing Filesystem
 
 One issue with this definition is that we do not control the filesystem: changes to the filesystem can happen at any time during the build.
 Therefore, we would need to constantly check file dependencies for consistency, and we can never be sure that a task is really consistent!
-That makes incremental build infeasible.
+That makes incremental builds infeasible.
 
-To solve that problem, we will introduce the concept of a build _session_ in which we only check tasks for consistency once.
+To solve that problem, we will introduce the concept of a _build session_ in which we only check tasks for consistency once.
 Once a task has been executed or checked, we don't check it anymore that session, solving the problem of constantly having to check file dependencies.
 A new session has to created to check those tasks again.
+Therefore, sessions are typically short-lived, and are created whenever file changes should be detected again.
 
 #### Integration Testing
 
