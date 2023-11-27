@@ -1,4 +1,4 @@
-# Minimality with Sessions
+# Incrementality with Sessions
 
 A task is consistent if its dependencies are consistent, and consistency of file dependencies is based on the filesystem.
 However, the filesystem can change during a build, meaning that a task can be affected by multiple different changes in one build.
@@ -8,9 +8,9 @@ Therefore, we will introduce the concept of a *session*.
 Builds are only performed in a session, and at most one session may exist at any given time.
 In one session, each task is checked or executed *at most once*, meaning that changes made to source files during a session are *not guaranteed to be detected*.
 
-The result is that if a task is deemed inconsistent at the time it is checked, it will be executed, and will not be checked nor executed any more that session.
+The result is that if a task is deemed inconsistent at the time it is checked, it will be executed and made consistent, and will not be checked nor executed any more that session.
 If a task is deemed consistent at the time it is checked, it will not be checked any more that session.
-This simplifies minimality and soundness, as we do not need to worry about checking tasks multiple times.
+This simplifies incrementality and correctness, as we do not need to worry about checking tasks multiple times.
 Furthermore, it is also an optimisation, as requiring the same task many times only results in one check.
 
 We will continue as follows:
@@ -118,9 +118,9 @@ In changes D and E, Rust is smart enough to allow creating a new session even th
 
 Check that the example works with `cargo run --example incremental`, and check that the rest of the code works by running `cargo test`.
 
-## Minimality
+## Incrementality
 
-Now we can ensure minimality by keeping track whether a task has been required this session.
+Now we can ensure incrementality by keeping track whether a task has been required this session.
 Change `pie/lib.rs`:
 
 ```diff2html fromfile linebyline
@@ -144,7 +144,7 @@ This increases performance when a lot of consistent tasks are required.
 Finally, at the end of `require`, we insert the task node into the `consistent` hash set, to denote that the task is now consistent this session.
 That's it! This was a simple change due to the work we did before to get the `Session` API in place.
 
-With this new API in place, minimality of task checking and execution in place, and all code adjusted to work with it, we can continue with tracking build events.
+With this new API in place, incrementality of task checking and execution in place, and all code adjusted to work with it, we can continue with tracking build events.
 
 ```admonish example title="Download source code" collapsible=true
 You can [download the source files up to this point](../../gen/3_min_sound/1_session/source.zip).
