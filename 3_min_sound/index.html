@@ -230,13 +230,14 @@ However, filesystem tracing is also not fully cross-platform and bulletproof, so
 Again, if a cross-platform and bulletproof filesystem tracing library exists, it would be extremely useful for programmatic incremental build systems.</p>
 </div>
 </details>
-<h4 id="sessions"><a class="header" href="#sessions">Sessions</a></h4>
+<h4 id="the-ever-changing-filesystem"><a class="header" href="#the-ever-changing-filesystem">The Ever-Changing Filesystem</a></h4>
 <p>One issue with this definition is that we do not control the filesystem: changes to the filesystem can happen at any time during the build.
 Therefore, we would need to constantly check file dependencies for consistency, and we can never be sure that a task is really consistent!
-That makes incremental build infeasible.</p>
-<p>To solve that problem, we will introduce the concept of a build <em>session</em> in which we only check tasks for consistency once.
+That makes incremental builds infeasible.</p>
+<p>To solve that problem, we will introduce the concept of a <em>build session</em> in which we only check tasks for consistency once.
 Once a task has been executed or checked, we don’t check it anymore that session, solving the problem of constantly having to check file dependencies.
-A new session has to created to check those tasks again.</p>
+A new session has to created to check those tasks again.
+Therefore, sessions are typically short-lived, and are created whenever file changes should be detected again.</p>
 <h4 id="integration-testing"><a class="header" href="#integration-testing">Integration Testing</a></h4>
 <p>In this chapter, we will show incrementality and correctness by integration testing.
 However, this requires quite some setup, as testing incrementality requires checking whether tasks are executed or not.
