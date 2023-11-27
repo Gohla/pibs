@@ -176,12 +176,19 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="example-interactive-parser-development"><a class="header" href="#example-interactive-parser-development">Example: Interactive Parser Development</a></h1>
-<p>To demonstrate what can be done with the programmatic incremental build system we just created, we will create a simple “interactive parser development” example.
-In this example, we can interactively develop a grammar for a new (programming) language, and test that grammar against several example files written in the new language.</p>
+<p>To demonstrate what can be done with the programmatic incremental build system we just created, we will create a simple “parser development” example.
+In this example, we can develop a grammar for a new (programming) language, and test that grammar against several example files written in the new language.</p>
+<p>It will have both a batch mode and an interactive mode.
+In the batch mode, the grammar is checked and compiled, the example program files are parsed with the grammar, and the results are printed to the terminal.
+The interactive mode will start up an interactive editor in which we can develop and test the grammar interactively.
+We will develop tasks to perform grammar compilation and parsing, and incrementally execute them with PIE.
+Both batch and interactive mode will use the same tasks!</p>
 <p>We will use <a href="https://pest.rs/" title="" target="_blank">pest</a> as the parser framework, because it is written in Rust and can be easily embedded into an application.
 Pest uses Parsing Expression Grammars (PEGs) which are easy to understand, which is also good for this example.</p>
 <p>For the GUI, we will use <a href="https://ratatui.rs/" title="" target="_blank">Ratatui</a>, which is a cross-platform terminal GUI framework, along with <a href="https://github.com/rhysd/tui-textarea" title="" target="_blank">tui-textarea</a> for a text editor widget.
 We could use a more featured GUI framework like <a href="https://github.com/emilk/egui" title="" target="_blank">egui</a>, but for this example we’ll keep it simple and runnable in a terminal.</p>
+<p>As a little teaser, this is what the interactive mode looks like:</p>
+<script src="https://asciinema.org/a/VfP8uiZ0MSs5QgzY0BhIxKp6L.js" id="asciicast-VfP8uiZ0MSs5QgzY0BhIxKp6L" async data-autoplay="true" data-loop="true" data-speed="1.25" data-idleTimeLimit="1" data-theme="solarized-dark"></script>
 <p>We will continue as follows:</p>
 <ol>
 <li>Implement compilation of pest grammars and parsing of text with the compiled grammar.</li>
@@ -679,7 +686,7 @@ We then require a parse task for every path in <code>args.program_file_paths</co
 Successes are printed to stdout and errors are written to <code>errors</code>.
 Finally, we print <code>errors</code> to stdout if there are any.</p>
 <p>To test this out, we need a grammar and some test files. Create <code>grammar.pest</code>:</p>
-<pre><code>num = { ASCII_DIGIT+ }
+<pre><code>num = @{ ASCII_DIGIT+ }
 
 main = { SOI ~ num ~ EOI }
 
@@ -691,15 +698,21 @@ WHITESPACE = _{ &quot; &quot; | &quot;\t&quot; | &quot;\n&quot; | &quot;\r&quot;
 <p><a class="admonition-anchor-link" href="#admonition-pest-grammars"></a></p>
 </div>
 <div>
-<p>It’s not important for this example to understand pest grammars, but I will explain the basics of this grammar.
+<p>You don’t need to fully understand pest grammars to finish this example.
+However, I will explain the basics of this grammar here.
 Feel free to learn and experiment more if you are interested.</p>
-<p>This grammar parses numbers with the <code>num</code> rule.
-The <code>main</code> rule ensures that there is no additional text before and after a <code>num</code> rule, using <a href="https://pest.rs/book/grammars/syntax.html#start-and-end-of-input" title="" target="_blank">
+<p>Grammars are <a href="https://pest.rs/book/grammars/syntax.html#syntax-of-pest-grammars" title="" target="_blank">lists of rules</a>, such as <code>num</code> and <code>main</code>.
+This grammar parses numbers with the <code>num</code> rule, matching 1 or more <code>ASCII_DIGIT</code> with <a href="https://pest.rs/book/grammars/syntax.html#repetition" title="" target="_blank">repetition</a>.</p>
+<p>The <code>main</code> rule ensures that there is no additional text before and after a <code>num</code> rule, using <a href="https://pest.rs/book/grammars/syntax.html#start-and-end-of-input" title="" target="_blank">
 <code>SOI</code> (start of input) <code>EOI</code> (end of input)</a>, and using the <a href="https://pest.rs/book/grammars/syntax.html#sequence" title="" target="_blank">
-<code>~</code> operator to sequence</a> these rules.
-We set the <a href="https://pest.rs/book/grammars/syntax.html#implicit-whitespace" title="" target="_blank">
-<code>WHITESPACE</code> builtin rule</a> to <code>{ &quot; &quot; | &quot;\t&quot; | &quot;\n&quot; | &quot;\r&quot; }</code> so that spaces, tabs, newlines, and carriage return characters are implicitly allowed between returns.
-The <code>_</code> operator before <code>{</code> indicates that it is a <a href="https://pest.rs/book/grammars/syntax.html#silent" title="" target="_blank">silent rule</a> that does not contribute to the parse result.</p>
+<code>~</code> operator to sequence</a> these rules.</p>
+<p>We set the <a href="https://pest.rs/book/grammars/syntax.html#implicit-whitespace" title="" target="_blank">
+<code>WHITESPACE</code> builtin rule</a> to <code>{ &quot; &quot; | &quot;\t&quot; | &quot;\n&quot; | &quot;\r&quot; }</code> so that spaces, tabs, newlines, and carriage return characters are implicitly allowed between sequenced rules.
+The <code>@</code> operator before <code>{</code> indicates that it is an <a href="https://pest.rs/book/grammars/syntax.html#atomic" title="" target="_blank">atomic rule</a>, disallowing implicit whitespace.
+We want this on the <code>num</code> rule so that we can’t add spaces in between digits of a number (try removing it and see!)</p>
+<p>The <code>_</code> operator before <code>{</code> indicates that it is a <a href="https://pest.rs/book/grammars/syntax.html#silent" title="" target="_blank">silent rule</a> that does not contribute to the parse result.
+This is important when processing the parse result into an <a href="https://pest.rs/book/examples/json.html#ast-generation" title="" target="_blank">Abstract Syntax Tree (AST)</a>.
+In this example we just print the parse result, so silent rules are not really needed, but I included it for completeness.</p>
 </div>
 </div>
 <p>Create <code>test_1.txt</code> with:</p>
