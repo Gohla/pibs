@@ -641,7 +641,7 @@ It returns the output of the task, which we test with <code>assert_eq!</code>.</
 <p>Run the test by running <code>cargo test</code>.
 The output should look something like:</p>
 <pre><code class="language-shell ">   Compiling pie v0.1.0 (/pie)
-    Finished test [unoptimized + debuginfo] target(s) in 0.33s
+    Finished test [unoptimized + debuginfo] target(s) in 0.31s
      Running unittests src/lib.rs (target/debug/deps/pie-7f6c7927ea39bed5)
 
 running 1 test
@@ -3511,7 +3511,7 @@ Run this example with <code>cargo run --example incremental</code>.
 You should see the <code>println!</code> in <code>ReadStringFromFile</code> appear in your console as the incremental context correctly determines that this task is new (i.e., has no output) and must be executed.
 It should look something like:</p>
 <pre><code>   Compiling pie v0.1.0 (/pie)
-    Finished dev [unoptimized + debuginfo] target(s) in 0.63s
+    Finished dev [unoptimized + debuginfo] target(s) in 0.61s
      Running `target/debug/examples/incremental`
 A) New task: expect `read_task` to execute
 Reading from input.txt with Modified stamper
@@ -3526,7 +3526,7 @@ Reading from input.txt with Modified stamper
   assert_eq!(&amp;output, &quot;Hi&quot;);</code></pre>
 <p>Running with <code>cargo run --example incremental</code> should produce output like:</p>
 <pre><code>   Compiling pie v0.1.0 (/pie)
-    Finished dev [unoptimized + debuginfo] target(s) in 0.36s
+    Finished dev [unoptimized + debuginfo] target(s) in 0.34s
      Running `target/debug/examples/incremental`
 A) New task: expect `read_task` to execute
 Reading from input.txt with Modified stamper
@@ -3588,7 +3588,7 @@ This shows that tasks can depend on the same file with different stampers, which
 <p>Of course, using an <code>Exists</code> stamper for <code>ReadStringFromFile</code> does not make a lot of sense, but this is for demonstration purposes only.</p>
 <p>Running <code>cargo run --example incremental</code> now should produce output like:</p>
 <pre><code>   Compiling pie v0.1.0 (/pie)
-    Finished dev [unoptimized + debuginfo] target(s) in 0.36s
+    Finished dev [unoptimized + debuginfo] target(s) in 0.35s
      Running `target/debug/examples/incremental`
 A) New task: expect `read_task` to execute
 Reading from input.txt with Modified stamper
@@ -4877,55 +4877,55 @@ You can add configuration booleans to control what should be written, but in thi
 <p>We remove the <code>println!</code> statements from tasks and create <code>Pie</code> with <code>WritingTracker</code>.
 Now run the example with <code>cargo run --example incremental</code>, and you should see the writing tracker print to standard output:</p>
 <pre><code>   Compiling pie v0.1.0 (/pie)
-    Finished dev [unoptimized + debuginfo] target(s) in 0.44s
+    Finished dev [unoptimized + debuginfo] target(s) in 0.43s
      Running `target/debug/examples/incremental`
 A) New task: expect `read_task` to execute
-→ ReadStringFromFile(&quot;/tmp/.tmpgYSG3j/input.txt&quot;, Modified)
- ▶ ReadStringFromFile(&quot;/tmp/.tmpgYSG3j/input.txt&quot;, Modified)
-  - /tmp/.tmpgYSG3j/input.txt
+→ ReadStringFromFile(&quot;/tmp/.tmpKuxegK/input.txt&quot;, Modified)
+ ▶ ReadStringFromFile(&quot;/tmp/.tmpKuxegK/input.txt&quot;, Modified)
+  - /tmp/.tmpKuxegK/input.txt
  ◀ Ok(&quot;Hi&quot;)
 ← Ok(&quot;Hi&quot;)
 🏁
 
 B) Reuse: expect no execution
-→ ReadStringFromFile(&quot;/tmp/.tmpgYSG3j/input.txt&quot;, Modified)
- ✓ /tmp/.tmpgYSG3j/input.txt
+→ ReadStringFromFile(&quot;/tmp/.tmpKuxegK/input.txt&quot;, Modified)
+ ✓ /tmp/.tmpKuxegK/input.txt
 ← Ok(&quot;Hi&quot;)
 🏁
 
 C) Inconsistent file dependency: expect `read_task` to execute
-→ ReadStringFromFile(&quot;/tmp/.tmpgYSG3j/input.txt&quot;, Modified)
- ✗ /tmp/.tmpgYSG3j/input.txt (old: Modified(Some(SystemTime { tv_sec: 1701091600, tv_nsec: 483383101 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1701091600, tv_nsec: 487383121 })))
- ▶ ReadStringFromFile(&quot;/tmp/.tmpgYSG3j/input.txt&quot;, Modified)
-  - /tmp/.tmpgYSG3j/input.txt
+→ ReadStringFromFile(&quot;/tmp/.tmpKuxegK/input.txt&quot;, Modified)
+ ✗ /tmp/.tmpKuxegK/input.txt (old: Modified(Some(SystemTime { tv_sec: 1701092576, tv_nsec: 418460137 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1701092576, tv_nsec: 422460124 })))
+ ▶ ReadStringFromFile(&quot;/tmp/.tmpKuxegK/input.txt&quot;, Modified)
+  - /tmp/.tmpKuxegK/input.txt
  ◀ Ok(&quot;Hello&quot;)
 ← Ok(&quot;Hello&quot;)
 🏁
 
 D) Different tasks: expect `read_task_b_modified` and `read_task_b_exists` to execute
-→ ReadStringFromFile(&quot;/tmp/.tmpgYSG3j/input_b.txt&quot;, Modified)
- ▶ ReadStringFromFile(&quot;/tmp/.tmpgYSG3j/input_b.txt&quot;, Modified)
-  - /tmp/.tmpgYSG3j/input_b.txt
+→ ReadStringFromFile(&quot;/tmp/.tmpKuxegK/input_b.txt&quot;, Modified)
+ ▶ ReadStringFromFile(&quot;/tmp/.tmpKuxegK/input_b.txt&quot;, Modified)
+  - /tmp/.tmpKuxegK/input_b.txt
  ◀ Ok(&quot;Test&quot;)
 ← Ok(&quot;Test&quot;)
 🏁
-→ ReadStringFromFile(&quot;/tmp/.tmpgYSG3j/input_b.txt&quot;, Exists)
- ▶ ReadStringFromFile(&quot;/tmp/.tmpgYSG3j/input_b.txt&quot;, Exists)
-  - /tmp/.tmpgYSG3j/input_b.txt
+→ ReadStringFromFile(&quot;/tmp/.tmpKuxegK/input_b.txt&quot;, Exists)
+ ▶ ReadStringFromFile(&quot;/tmp/.tmpKuxegK/input_b.txt&quot;, Exists)
+  - /tmp/.tmpKuxegK/input_b.txt
  ◀ Ok(&quot;Test&quot;)
 ← Ok(&quot;Test&quot;)
 🏁
 
 E) Different stampers: expect only `read_task_b_modified` to execute
-→ ReadStringFromFile(&quot;/tmp/.tmpgYSG3j/input_b.txt&quot;, Modified)
- ✗ /tmp/.tmpgYSG3j/input_b.txt (old: Modified(Some(SystemTime { tv_sec: 1701091600, tv_nsec: 487383121 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1701091600, tv_nsec: 491383139 })))
- ▶ ReadStringFromFile(&quot;/tmp/.tmpgYSG3j/input_b.txt&quot;, Modified)
-  - /tmp/.tmpgYSG3j/input_b.txt
+→ ReadStringFromFile(&quot;/tmp/.tmpKuxegK/input_b.txt&quot;, Modified)
+ ✗ /tmp/.tmpKuxegK/input_b.txt (old: Modified(Some(SystemTime { tv_sec: 1701092576, tv_nsec: 422460124 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1701092576, tv_nsec: 426460111 })))
+ ▶ ReadStringFromFile(&quot;/tmp/.tmpKuxegK/input_b.txt&quot;, Modified)
+  - /tmp/.tmpKuxegK/input_b.txt
  ◀ Ok(&quot;Test Test&quot;)
 ← Ok(&quot;Test Test&quot;)
 🏁
-→ ReadStringFromFile(&quot;/tmp/.tmpgYSG3j/input_b.txt&quot;, Exists)
- ✓ /tmp/.tmpgYSG3j/input_b.txt
+→ ReadStringFromFile(&quot;/tmp/.tmpKuxegK/input_b.txt&quot;, Exists)
+ ✓ /tmp/.tmpKuxegK/input_b.txt
 ← Ok(&quot;Test&quot;)
 🏁
 </code></pre>
@@ -6290,23 +6290,23 @@ How can that be?</p>
 </div>
 <p>Inspect the build log with <code>cargo test --test top_down test_no_superfluous_task_dependencies</code>.
 The third (last) build log should look like this:</p>
-<pre><code>→ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmp4LwYxO/in.txt&quot;, Modified)))
- ? ReadFile(&quot;/tmp/.tmp4LwYxO/in.txt&quot;, Modified)
-  → ReadFile(&quot;/tmp/.tmp4LwYxO/in.txt&quot;, Modified)
-   ✗ /tmp/.tmp4LwYxO/in.txt (old: Modified(Some(SystemTime { tv_sec: 1701091608, tv_nsec: 731422607 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1701091608, tv_nsec: 735422626 })))
-   ▶ ReadFile(&quot;/tmp/.tmp4LwYxO/in.txt&quot;, Modified)
-    - /tmp/.tmp4LwYxO/in.txt
+<pre><code>→ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmpSidAbs/in.txt&quot;, Modified)))
+ ? ReadFile(&quot;/tmp/.tmpSidAbs/in.txt&quot;, Modified)
+  → ReadFile(&quot;/tmp/.tmpSidAbs/in.txt&quot;, Modified)
+   ✗ /tmp/.tmpSidAbs/in.txt (old: Modified(Some(SystemTime { tv_sec: 1701092584, tv_nsec: 122433058 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1701092584, tv_nsec: 126433042 })))
+   ▶ ReadFile(&quot;/tmp/.tmpSidAbs/in.txt&quot;, Modified)
+    - /tmp/.tmpSidAbs/in.txt
    ◀ Ok(String(&quot;HeLLo, WorLd!&quot;))
   ← Ok(String(&quot;HeLLo, WorLd!&quot;))
- ✗ ReadFile(&quot;/tmp/.tmp4LwYxO/in.txt&quot;, Modified) (old: Equals(Ok(String(&quot;Hello, World!&quot;))) ≠ new: Equals(Ok(String(&quot;HeLLo, WorLd!&quot;))))
- ▶ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmp4LwYxO/in.txt&quot;, Modified)))
-  → ToLower(ReadFile(&quot;/tmp/.tmp4LwYxO/in.txt&quot;, Modified))
-   ? ReadFile(&quot;/tmp/.tmp4LwYxO/in.txt&quot;, Modified)
-    → ReadFile(&quot;/tmp/.tmp4LwYxO/in.txt&quot;, Modified)
+ ✗ ReadFile(&quot;/tmp/.tmpSidAbs/in.txt&quot;, Modified) (old: Equals(Ok(String(&quot;Hello, World!&quot;))) ≠ new: Equals(Ok(String(&quot;HeLLo, WorLd!&quot;))))
+ ▶ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmpSidAbs/in.txt&quot;, Modified)))
+  → ToLower(ReadFile(&quot;/tmp/.tmpSidAbs/in.txt&quot;, Modified))
+   ? ReadFile(&quot;/tmp/.tmpSidAbs/in.txt&quot;, Modified)
+    → ReadFile(&quot;/tmp/.tmpSidAbs/in.txt&quot;, Modified)
     ← Ok(String(&quot;HeLLo, WorLd!&quot;))
-   ✗ ReadFile(&quot;/tmp/.tmp4LwYxO/in.txt&quot;, Modified) (old: Equals(Ok(String(&quot;Hello, World!&quot;))) ≠ new: Equals(Ok(String(&quot;HeLLo, WorLd!&quot;))))
-   ▶ ToLower(ReadFile(&quot;/tmp/.tmp4LwYxO/in.txt&quot;, Modified))
-    → ReadFile(&quot;/tmp/.tmp4LwYxO/in.txt&quot;, Modified)
+   ✗ ReadFile(&quot;/tmp/.tmpSidAbs/in.txt&quot;, Modified) (old: Equals(Ok(String(&quot;Hello, World!&quot;))) ≠ new: Equals(Ok(String(&quot;HeLLo, WorLd!&quot;))))
+   ▶ ToLower(ReadFile(&quot;/tmp/.tmpSidAbs/in.txt&quot;, Modified))
+    → ReadFile(&quot;/tmp/.tmpSidAbs/in.txt&quot;, Modified)
     ← Ok(String(&quot;HeLLo, WorLd!&quot;))
    ◀ Ok(String(&quot;hello, world!&quot;))
   ← Ok(String(&quot;hello, world!&quot;))
@@ -6373,14 +6373,14 @@ Even if we are only <em>consistency checking</em> a task to see if it should be 
 We only manifested the bug in the last test due to having a chain of 2 task dependencies, and by carefully controlling what is being executed and what is being checked.</p>
 <p>Recall the second build in the <code>test_no_superfluous_task_dependencies</code> test.
 The build log for that build looks like:</p>
-<pre><code>→ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmp4LwYxO/in.txt&quot;, Modified)))
- ▶ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmp4LwYxO/in.txt&quot;, Modified)))
-  → ToLower(ReadFile(&quot;/tmp/.tmp4LwYxO/in.txt&quot;, Modified))
-   ? ReadFile(&quot;/tmp/.tmp4LwYxO/in.txt&quot;, Modified)
-    → ReadFile(&quot;/tmp/.tmp4LwYxO/in.txt&quot;, Modified)
-     ✓ /tmp/.tmp4LwYxO/in.txt
+<pre><code>→ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmpSidAbs/in.txt&quot;, Modified)))
+ ▶ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmpSidAbs/in.txt&quot;, Modified)))
+  → ToLower(ReadFile(&quot;/tmp/.tmpSidAbs/in.txt&quot;, Modified))
+   ? ReadFile(&quot;/tmp/.tmpSidAbs/in.txt&quot;, Modified)
+    → ReadFile(&quot;/tmp/.tmpSidAbs/in.txt&quot;, Modified)
+     ✓ /tmp/.tmpSidAbs/in.txt
     ← Ok(String(&quot;Hello, World!&quot;))
-   ✓ ReadFile(&quot;/tmp/.tmp4LwYxO/in.txt&quot;, Modified)
+   ✓ ReadFile(&quot;/tmp/.tmpSidAbs/in.txt&quot;, Modified)
   ← Ok(String(&quot;hello, world!&quot;))
  ◀ Ok(String(&quot;HELLO, WORLD!&quot;))
 ← Ok(String(&quot;HELLO, WORLD!&quot;))
@@ -6659,24 +6659,24 @@ However, <code>test_require_task</code> now fails 😅.</p>
 This is because our changes have correctly removed several superfluous task requires, which influences these assertions.</p>
 <p>Inspect the build log for this test with <code>cargo test --test top_down test_require_task</code>.
 The second build now looks like:</p>
-<pre><code>→ ToLower(ReadFile(&quot;/tmp/.tmpeCgW0N/in.txt&quot;, Modified))
- ? ReadFile(&quot;/tmp/.tmpeCgW0N/in.txt&quot;, Modified)
-  ✓ /tmp/.tmpeCgW0N/in.txt
- ✓ ReadFile(&quot;/tmp/.tmpeCgW0N/in.txt&quot;, Modified)
+<pre><code>→ ToLower(ReadFile(&quot;/tmp/.tmpMxLod2/in.txt&quot;, Modified))
+ ? ReadFile(&quot;/tmp/.tmpMxLod2/in.txt&quot;, Modified)
+  ✓ /tmp/.tmpMxLod2/in.txt
+ ✓ ReadFile(&quot;/tmp/.tmpMxLod2/in.txt&quot;, Modified)
 ← Ok(String(&quot;hello world!&quot;))
 </code></pre>
 <p>In this second build, <code>ReadFile</code> is now no longer required, and instead is only checked.
 This is correct, and does not make any assertions fail.</p>
 <p>The third build now looks like:</p>
-<pre><code>→ ToLower(ReadFile(&quot;/tmp/.tmpeCgW0N/in.txt&quot;, Modified))
- ? ReadFile(&quot;/tmp/.tmpeCgW0N/in.txt&quot;, Modified)
-  ✗ /tmp/.tmpeCgW0N/in.txt (old: Modified(Some(SystemTime { tv_sec: 1701091609, tv_nsec: 599426776 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1701091609, tv_nsec: 603426796 })))
-  ▶ ReadFile(&quot;/tmp/.tmpeCgW0N/in.txt&quot;, Modified)
-   - /tmp/.tmpeCgW0N/in.txt
+<pre><code>→ ToLower(ReadFile(&quot;/tmp/.tmpMxLod2/in.txt&quot;, Modified))
+ ? ReadFile(&quot;/tmp/.tmpMxLod2/in.txt&quot;, Modified)
+  ✗ /tmp/.tmpMxLod2/in.txt (old: Modified(Some(SystemTime { tv_sec: 1701092584, tv_nsec: 970429793 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1701092584, tv_nsec: 974429778 })))
+  ▶ ReadFile(&quot;/tmp/.tmpMxLod2/in.txt&quot;, Modified)
+   - /tmp/.tmpMxLod2/in.txt
   ◀ Ok(String(&quot;!DLROW OLLEH&quot;))
- ✗ ReadFile(&quot;/tmp/.tmpeCgW0N/in.txt&quot;, Modified) (old: Equals(Ok(String(&quot;HELLO WORLD!&quot;))) ≠ new: Equals(Ok(String(&quot;!DLROW OLLEH&quot;))))
- ▶ ToLower(ReadFile(&quot;/tmp/.tmpeCgW0N/in.txt&quot;, Modified))
-  → ReadFile(&quot;/tmp/.tmpeCgW0N/in.txt&quot;, Modified)
+ ✗ ReadFile(&quot;/tmp/.tmpMxLod2/in.txt&quot;, Modified) (old: Equals(Ok(String(&quot;HELLO WORLD!&quot;))) ≠ new: Equals(Ok(String(&quot;!DLROW OLLEH&quot;))))
+ ▶ ToLower(ReadFile(&quot;/tmp/.tmpMxLod2/in.txt&quot;, Modified))
+  → ReadFile(&quot;/tmp/.tmpMxLod2/in.txt&quot;, Modified)
   ← Ok(String(&quot;!DLROW OLLEH&quot;))
  ◀ Ok(String(&quot;!dlrow olleh&quot;))
 ← Ok(String(&quot;!dlrow olleh&quot;))
