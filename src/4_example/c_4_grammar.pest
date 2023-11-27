@@ -1,4 +1,4 @@
-num = { ASCII_DIGIT+ }
+num = @{ ASCII_DIGIT+ }
 
 main = { SOI ~ num ~ EOI }
 
