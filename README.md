@@ -20,7 +20,7 @@ cargo install --path mdbook-diff2html
 If you have [`cargo install-update`](https://github.com/nabijaczleweli/cargo-update) installed, you can instead install and/or update the external binaries with:
 
 ```shell
-cargo install-update mdbook mdbook-admonish mdbook-external-links
+cargo install-update -i mdbook mdbook-admonish mdbook-external-links
 ```
 
 ## Building

@@ -1,7 +1,7 @@
-# Example: Interactive Parser Development
+# Project: Interactive Parser Development
 
-To demonstrate what can be done with the programmatic incremental build system we just created, we will create a simple "parser development" example.
-In this example, we can develop a grammar for a new (programming) language, and test that grammar against several example files written in the new language.
+To demonstrate what can be done with the programmatic incremental build system we just created, we will develop a "parser development" build script and interactive editor as a project.
+In this project, we can develop a grammar for a new (programming) language, and test that grammar against several example files written in the new language.
 
 It will have both a batch mode and an interactive mode.
 In the batch mode, the grammar is checked and compiled, the example program files are parsed with the grammar, and the results are printed to the terminal.
@@ -10,10 +10,10 @@ We will develop tasks to perform grammar compilation and parsing, and incrementa
 Both batch and interactive mode will use the same tasks!
 
 We will use [pest](https://pest.rs/) as the parser framework, because it is written in Rust and can be easily embedded into an application.
-Pest uses Parsing Expression Grammars (PEGs) which are easy to understand, which is also good for this example.
+Pest uses Parsing Expression Grammars (PEGs) which are easy to understand, which is also good for this project.
 
 For the GUI, we will use [Ratatui](https://ratatui.rs/), which is a cross-platform terminal GUI framework, along with [tui-textarea](https://github.com/rhysd/tui-textarea) for a text editor widget.
-We could use a more featured GUI framework like [egui](https://github.com/emilk/egui), but for this example we'll keep it simple and runnable in a terminal.
+We could use a more featured GUI framework like [egui](https://github.com/emilk/egui), but for this project we'll keep it simple and runnable in a terminal.
 
 As a little teaser, this is what the interactive mode looks like:
 
