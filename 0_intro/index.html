@@ -194,7 +194,7 @@ However, if you like to learn through examples and experimentation, or already k
 <li><em>Correct</em>: Builds are fully correct – all parts of the build that are affected by changes are executed. Builds are free of glitches: only up-to-date (consistent) data is observed.</li>
 <li><em>Automatic</em>: The system takes care of incrementality and correctness. Programmers <em>do not</em> have to manually implement incrementality. Instead, they only have to explicitly <em>declare dependencies</em>.</li>
 </ul>
-<p>To show the benefits of a build system with these key properties, here is a simplified version of the programmatic incremental build script for compiling a formal grammar and parsing text with that compiled grammar, which is the build script you will implement in the <a href="../4_example/index.html">final project chapter</a>.
+<p>To show the benefits of a build system with these key properties, below is a simplified version of the build script for compiling a formal grammar and parsing text with that compiled grammar, which is the build script you will implement in the <a href="../4_example/index.html">final project chapter</a>.
 This simplified version removes details that are not important for understanding programmatic incremental build systems at this moment.</p>
 <div id="admonition-info" class="admonition admonish-info">
 <div class="admonition-title">
@@ -262,16 +262,16 @@ However, this program is also a build script because <code>ParseTasks</code> imp
 For example, <code>ParseTasks::CompileGrammar</code> carries <code>grammar_file_path</code> which is the file path of the grammar that it will compile.
 When we <code>execute</code> a <code>ParseTasks::CompileGrammar</code> task, it reads the text of the grammar from the file, compiles that text into a grammar, and returns a compiled grammar.</p>
 <h5 id="incremental-file-dependencies"><a class="header" href="#incremental-file-dependencies">Incremental File Dependencies</a></h5>
-<p>However, we want this task to be incremental, such that this task is only re-executed when the <code>grammar_file_path</code> file changes.
+<p>However, we want this task to be incremental, such that this task is only re-executed when the contents of the <code>grammar_file_path</code> file changes.
 Therefore, <code>execute</code> has a <code>context</code> parameter which is an <em>incremental build context</em> that tasks use to tell the build system about dependencies.
-For example, <code>ParseTasks::CompileGrammar</code> tells the build system that it <em>requires</em> the file with <code>context.require_file(grammar_file_path)</code>, marking the file as a <em>read dependency</em>.
-It is then the responsibility of the incremental build system to only execute this task if the file has changed.</p>
+For example, <code>ParseTasks::CompileGrammar</code> tells the build system that it <em>requires</em> the <code>grammar_file_path</code> file with <code>context.require_file(grammar_file_path)</code>, creating a <em>read file dependency</em> to that file.
+It is then the responsibility of the incremental build system to only execute this task if the file contents have changed.</p>
 <h5 id="dynamic-dependencies"><a class="header" href="#dynamic-dependencies">Dynamic Dependencies</a></h5>
 <p>Note that this file dependency is created <em>while the task is executing</em>.
-We call these <em>dynamic dependencies</em>, as opposed to static dependencies that are hardcoded into the build script.
+We call these <em>dynamic dependencies</em>, as opposed to static dependencies.
 Dynamic dependencies enable the <em>programmatic</em> part of programmatic incremental build systems, because dependencies are made while your program is running, and can thus depend on values computed earlier in your program.</p>
 <p>Another benefit of dynamic dependencies is that they enable <em>exact</em> dependencies: the dependencies of a task exactly describe when the task should be re-executed, increasing incrementality.
-With static dependencies, you often have to over-approximate dependencies, leading to reduced incrementality.</p>
+With static dependencies that are hardcoded into the build script, you often have to over-approximate dependencies, leading to reduced incrementality.</p>
 <h5 id="incremental-task-dependencies"><a class="header" href="#incremental-task-dependencies">Incremental Task Dependencies</a></h5>
 <p>Dynamic dependencies are also created <em>between tasks</em>.
 For example, <code>ParseTasks::Parse</code> carries <code>compile_grammar_task</code> which is an instance of the <code>ParseTasks::CompileGrammar</code> task to compile a grammar.

@@ -192,7 +192,7 @@ However, if you like to learn through examples and experimentation, or already k
 <li><em>Correct</em>: Builds are fully correct – all parts of the build that are affected by changes are executed. Builds are free of glitches: only up-to-date (consistent) data is observed.</li>
 <li><em>Automatic</em>: The system takes care of incrementality and correctness. Programmers <em>do not</em> have to manually implement incrementality. Instead, they only have to explicitly <em>declare dependencies</em>.</li>
 </ul>
-<p>To show the benefits of a build system with these key properties, here is a simplified version of the programmatic incremental build script for compiling a formal grammar and parsing text with that compiled grammar, which is the build script you will implement in the <a href="0_intro/../4_example/index.html">final project chapter</a>.
+<p>To show the benefits of a build system with these key properties, below is a simplified version of the build script for compiling a formal grammar and parsing text with that compiled grammar, which is the build script you will implement in the <a href="0_intro/../4_example/index.html">final project chapter</a>.
 This simplified version removes details that are not important for understanding programmatic incremental build systems at this moment.</p>
 <div id="admonition-info" class="admonition admonish-info">
 <div class="admonition-title">
@@ -260,16 +260,16 @@ However, this program is also a build script because <code>ParseTasks</code> imp
 For example, <code>ParseTasks::CompileGrammar</code> carries <code>grammar_file_path</code> which is the file path of the grammar that it will compile.
 When we <code>execute</code> a <code>ParseTasks::CompileGrammar</code> task, it reads the text of the grammar from the file, compiles that text into a grammar, and returns a compiled grammar.</p>
 <h5 id="incremental-file-dependencies"><a class="header" href="#incremental-file-dependencies">Incremental File Dependencies</a></h5>
-<p>However, we want this task to be incremental, such that this task is only re-executed when the <code>grammar_file_path</code> file changes.
+<p>However, we want this task to be incremental, such that this task is only re-executed when the contents of the <code>grammar_file_path</code> file changes.
 Therefore, <code>execute</code> has a <code>context</code> parameter which is an <em>incremental build context</em> that tasks use to tell the build system about dependencies.
-For example, <code>ParseTasks::CompileGrammar</code> tells the build system that it <em>requires</em> the file with <code>context.require_file(grammar_file_path)</code>, marking the file as a <em>read dependency</em>.
-It is then the responsibility of the incremental build system to only execute this task if the file has changed.</p>
+For example, <code>ParseTasks::CompileGrammar</code> tells the build system that it <em>requires</em> the <code>grammar_file_path</code> file with <code>context.require_file(grammar_file_path)</code>, creating a <em>read file dependency</em> to that file.
+It is then the responsibility of the incremental build system to only execute this task if the file contents have changed.</p>
 <h5 id="dynamic-dependencies"><a class="header" href="#dynamic-dependencies">Dynamic Dependencies</a></h5>
 <p>Note that this file dependency is created <em>while the task is executing</em>.
-We call these <em>dynamic dependencies</em>, as opposed to static dependencies that are hardcoded into the build script.
+We call these <em>dynamic dependencies</em>, as opposed to static dependencies.
 Dynamic dependencies enable the <em>programmatic</em> part of programmatic incremental build systems, because dependencies are made while your program is running, and can thus depend on values computed earlier in your program.</p>
 <p>Another benefit of dynamic dependencies is that they enable <em>exact</em> dependencies: the dependencies of a task exactly describe when the task should be re-executed, increasing incrementality.
-With static dependencies, you often have to over-approximate dependencies, leading to reduced incrementality.</p>
+With static dependencies that are hardcoded into the build script, you often have to over-approximate dependencies, leading to reduced incrementality.</p>
 <h5 id="incremental-task-dependencies"><a class="header" href="#incremental-task-dependencies">Incremental Task Dependencies</a></h5>
 <p>Dynamic dependencies are also created <em>between tasks</em>.
 For example, <code>ParseTasks::Parse</code> carries <code>compile_grammar_task</code> which is an instance of the <code>ParseTasks::CompileGrammar</code> task to compile a grammar.
@@ -457,7 +457,7 @@ A non-incremental context can naively execute tasks without checking.</p>
 <p><a class="admonition-anchor-link" href="1_programmability/1_api/index.html#admonition-context"></a></p>
 </div>
 <div>
-<p>In this tutorial, we will be using the words <em>context</em>, <em>build context</em>, and <em>build system</em> interchangeably, typically using just <em>context</em> as it is concise.</p>
+<p>In this tutorial, we will be using the words <em>context</em>, <em>build context</em>, <em>incremental build context</em>, and <em>build system</em> interchangeably, typically using just <em>context</em> as it is concise.</p>
 </div>
 </div>
 <p>Let’s make tasks and contexts more concrete by defining them in code.</p>
@@ -488,8 +488,8 @@ pub trait Context&lt;T: Task&gt; {
 <p><a class="admonition-anchor-link" href="1_programmability/1_api/index.html#admonition-tip"></a></p>
 </div>
 <div>
-<p>If this seems overwhelming to you, don’t worry. We will go through the API and explain things. But more importantly, the API should become more clear once we implement it in the next section and subsequent chapters.
-Furthermore, if you’re new to Rust and/or need help understanding certain concepts, I will try to explain them in Rust Help blocks. They are collapsed by default to reduce distraction, clicking the header opens them. See the first Rust Help block at the end of this section.</p>
+<p>If this seems overwhelming to you, don’t worry. We will go through the API and explain things. But more importantly, the API should become more clear once we implement it in the next section and subsequent chapters.</p>
+<p>Furthermore, if you’re new to Rust and/or need help understanding certain concepts, I will try to explain them in Rust Help blocks. They are collapsed by default to reduce distraction, clicking the header opens them. See the first Rust Help block at the end of this section.</p>
 </div>
 </div>
 <p>The <code>Task</code> trait has several supertraits that we will need later in the tutorial to implement incrementality:</p>
@@ -508,10 +508,10 @@ It has a single method <code>require_task</code> for creating a dependency to a 
 It takes a mutable reference to itself, enabling dynamic dependency tracking and caching, which require mutation.
 Because of this, the context reference passed to <code>Task::execute</code> is also mutable.</p>
 <p>This <code>Task</code> and <code>Context</code> API mirrors the mutually recursive definition of task and context we discussed earlier, and forms the basis for the entire build system.</p>
-<div id="admonition-note" class="admonition admonish-note">
+<div id="admonition-file-dependencies-next-chapter" class="admonition admonish-tip">
 <div class="admonition-title">
-<p>Note</p>
-<p><a class="admonition-anchor-link" href="1_programmability/1_api/index.html#admonition-note"></a></p>
+<p>File Dependencies: Next Chapter</p>
+<p><a class="admonition-anchor-link" href="1_programmability/1_api/index.html#admonition-file-dependencies-next-chapter"></a></p>
 </div>
 <div>
 <p>We will implement file dependencies in the next chapter, as file dependencies only become important with incrementality.</p>
@@ -3556,7 +3556,7 @@ Run this example with <code>cargo run --example incremental</code>.
 You should see the <code>println!</code> in <code>ReadStringFromFile</code> appear in your console as the incremental context correctly determines that this task is new (i.e., has no output) and must be executed.
 It should look something like:</p>
 <pre><code>   Compiling pie v0.1.0 (/pie)
-    Finished dev [unoptimized + debuginfo] target(s) in 0.64s
+    Finished dev [unoptimized + debuginfo] target(s) in 0.63s
      Running `target/debug/examples/incremental`
 A) New task: expect `read_task` to execute
 Reading from input.txt with Modified stamper
@@ -4959,55 +4959,55 @@ You can add configuration booleans to control what should be written, but in thi
 <p>We remove the <code>println!</code> statements from tasks and create <code>Pie</code> with <code>WritingTracker</code>.
 Now run the example with <code>cargo run --example incremental</code>, and you should see the writing tracker print to standard output:</p>
 <pre><code>   Compiling pie v0.1.0 (/pie)
-    Finished dev [unoptimized + debuginfo] target(s) in 0.45s
+    Finished dev [unoptimized + debuginfo] target(s) in 0.44s
      Running `target/debug/examples/incremental`
 A) New task: expect `read_task` to execute
-→ ReadStringFromFile(&quot;/tmp/.tmpyZBHDx/input.txt&quot;, Modified)
- ▶ ReadStringFromFile(&quot;/tmp/.tmpyZBHDx/input.txt&quot;, Modified)
-  - /tmp/.tmpyZBHDx/input.txt
+→ ReadStringFromFile(&quot;/tmp/.tmp52XMZq/input.txt&quot;, Modified)
+ ▶ ReadStringFromFile(&quot;/tmp/.tmp52XMZq/input.txt&quot;, Modified)
+  - /tmp/.tmp52XMZq/input.txt
  ◀ Ok(&quot;Hi&quot;)
 ← Ok(&quot;Hi&quot;)
 🏁
 
 B) Reuse: expect no execution
-→ ReadStringFromFile(&quot;/tmp/.tmpyZBHDx/input.txt&quot;, Modified)
- ✓ /tmp/.tmpyZBHDx/input.txt
+→ ReadStringFromFile(&quot;/tmp/.tmp52XMZq/input.txt&quot;, Modified)
+ ✓ /tmp/.tmp52XMZq/input.txt
 ← Ok(&quot;Hi&quot;)
 🏁
 
 C) Inconsistent file dependency: expect `read_task` to execute
-→ ReadStringFromFile(&quot;/tmp/.tmpyZBHDx/input.txt&quot;, Modified)
- ✗ /tmp/.tmpyZBHDx/input.txt (old: Modified(Some(SystemTime { tv_sec: 1702653766, tv_nsec: 681933356 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1702653766, tv_nsec: 685933377 })))
- ▶ ReadStringFromFile(&quot;/tmp/.tmpyZBHDx/input.txt&quot;, Modified)
-  - /tmp/.tmpyZBHDx/input.txt
+→ ReadStringFromFile(&quot;/tmp/.tmp52XMZq/input.txt&quot;, Modified)
+ ✗ /tmp/.tmp52XMZq/input.txt (old: Modified(Some(SystemTime { tv_sec: 1702654627, tv_nsec: 533025440 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1702654627, tv_nsec: 537025416 })))
+ ▶ ReadStringFromFile(&quot;/tmp/.tmp52XMZq/input.txt&quot;, Modified)
+  - /tmp/.tmp52XMZq/input.txt
  ◀ Ok(&quot;Hello&quot;)
 ← Ok(&quot;Hello&quot;)
 🏁
 
 D) Different tasks: expect `read_task_b_modified` and `read_task_b_exists` to execute
-→ ReadStringFromFile(&quot;/tmp/.tmpyZBHDx/input_b.txt&quot;, Modified)
- ▶ ReadStringFromFile(&quot;/tmp/.tmpyZBHDx/input_b.txt&quot;, Modified)
-  - /tmp/.tmpyZBHDx/input_b.txt
+→ ReadStringFromFile(&quot;/tmp/.tmp52XMZq/input_b.txt&quot;, Modified)
+ ▶ ReadStringFromFile(&quot;/tmp/.tmp52XMZq/input_b.txt&quot;, Modified)
+  - /tmp/.tmp52XMZq/input_b.txt
  ◀ Ok(&quot;Test&quot;)
 ← Ok(&quot;Test&quot;)
 🏁
-→ ReadStringFromFile(&quot;/tmp/.tmpyZBHDx/input_b.txt&quot;, Exists)
- ▶ ReadStringFromFile(&quot;/tmp/.tmpyZBHDx/input_b.txt&quot;, Exists)
-  - /tmp/.tmpyZBHDx/input_b.txt
+→ ReadStringFromFile(&quot;/tmp/.tmp52XMZq/input_b.txt&quot;, Exists)
+ ▶ ReadStringFromFile(&quot;/tmp/.tmp52XMZq/input_b.txt&quot;, Exists)
+  - /tmp/.tmp52XMZq/input_b.txt
  ◀ Ok(&quot;Test&quot;)
 ← Ok(&quot;Test&quot;)
 🏁
 
 E) Different stampers: expect only `read_task_b_modified` to execute
-→ ReadStringFromFile(&quot;/tmp/.tmpyZBHDx/input_b.txt&quot;, Modified)
- ✗ /tmp/.tmpyZBHDx/input_b.txt (old: Modified(Some(SystemTime { tv_sec: 1702653766, tv_nsec: 685933377 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1702653766, tv_nsec: 689933398 })))
- ▶ ReadStringFromFile(&quot;/tmp/.tmpyZBHDx/input_b.txt&quot;, Modified)
-  - /tmp/.tmpyZBHDx/input_b.txt
+→ ReadStringFromFile(&quot;/tmp/.tmp52XMZq/input_b.txt&quot;, Modified)
+ ✗ /tmp/.tmp52XMZq/input_b.txt (old: Modified(Some(SystemTime { tv_sec: 1702654627, tv_nsec: 537025416 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1702654627, tv_nsec: 541025393 })))
+ ▶ ReadStringFromFile(&quot;/tmp/.tmp52XMZq/input_b.txt&quot;, Modified)
+  - /tmp/.tmp52XMZq/input_b.txt
  ◀ Ok(&quot;Test Test&quot;)
 ← Ok(&quot;Test Test&quot;)
 🏁
-→ ReadStringFromFile(&quot;/tmp/.tmpyZBHDx/input_b.txt&quot;, Exists)
- ✓ /tmp/.tmpyZBHDx/input_b.txt
+→ ReadStringFromFile(&quot;/tmp/.tmp52XMZq/input_b.txt&quot;, Exists)
+ ✓ /tmp/.tmp52XMZq/input_b.txt
 ← Ok(&quot;Test&quot;)
 🏁
 </code></pre>
@@ -6372,23 +6372,23 @@ How can that be?</p>
 </div>
 <p>Inspect the build log with <code>cargo test --test top_down test_no_superfluous_task_dependencies</code>.
 The third (last) build log should look like this:</p>
-<pre><code>→ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmp3AVPYA/in.txt&quot;, Modified)))
- ? ReadFile(&quot;/tmp/.tmp3AVPYA/in.txt&quot;, Modified)
-  → ReadFile(&quot;/tmp/.tmp3AVPYA/in.txt&quot;, Modified)
-   ✗ /tmp/.tmp3AVPYA/in.txt (old: Modified(Some(SystemTime { tv_sec: 1702653773, tv_nsec: 877971107 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1702653773, tv_nsec: 881971128 })))
-   ▶ ReadFile(&quot;/tmp/.tmp3AVPYA/in.txt&quot;, Modified)
-    - /tmp/.tmp3AVPYA/in.txt
+<pre><code>→ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmpDPrQCb/in.txt&quot;, Modified)))
+ ? ReadFile(&quot;/tmp/.tmpDPrQCb/in.txt&quot;, Modified)
+  → ReadFile(&quot;/tmp/.tmpDPrQCb/in.txt&quot;, Modified)
+   ✗ /tmp/.tmpDPrQCb/in.txt (old: Modified(Some(SystemTime { tv_sec: 1702654636, tv_nsec: 80973351 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1702654636, tv_nsec: 84973328 })))
+   ▶ ReadFile(&quot;/tmp/.tmpDPrQCb/in.txt&quot;, Modified)
+    - /tmp/.tmpDPrQCb/in.txt
    ◀ Ok(String(&quot;HeLLo, WorLd!&quot;))
   ← Ok(String(&quot;HeLLo, WorLd!&quot;))
- ✗ ReadFile(&quot;/tmp/.tmp3AVPYA/in.txt&quot;, Modified) (old: Equals(Ok(String(&quot;Hello, World!&quot;))) ≠ new: Equals(Ok(String(&quot;HeLLo, WorLd!&quot;))))
- ▶ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmp3AVPYA/in.txt&quot;, Modified)))
-  → ToLower(ReadFile(&quot;/tmp/.tmp3AVPYA/in.txt&quot;, Modified))
-   ? ReadFile(&quot;/tmp/.tmp3AVPYA/in.txt&quot;, Modified)
-    → ReadFile(&quot;/tmp/.tmp3AVPYA/in.txt&quot;, Modified)
+ ✗ ReadFile(&quot;/tmp/.tmpDPrQCb/in.txt&quot;, Modified) (old: Equals(Ok(String(&quot;Hello, World!&quot;))) ≠ new: Equals(Ok(String(&quot;HeLLo, WorLd!&quot;))))
+ ▶ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmpDPrQCb/in.txt&quot;, Modified)))
+  → ToLower(ReadFile(&quot;/tmp/.tmpDPrQCb/in.txt&quot;, Modified))
+   ? ReadFile(&quot;/tmp/.tmpDPrQCb/in.txt&quot;, Modified)
+    → ReadFile(&quot;/tmp/.tmpDPrQCb/in.txt&quot;, Modified)
     ← Ok(String(&quot;HeLLo, WorLd!&quot;))
-   ✗ ReadFile(&quot;/tmp/.tmp3AVPYA/in.txt&quot;, Modified) (old: Equals(Ok(String(&quot;Hello, World!&quot;))) ≠ new: Equals(Ok(String(&quot;HeLLo, WorLd!&quot;))))
-   ▶ ToLower(ReadFile(&quot;/tmp/.tmp3AVPYA/in.txt&quot;, Modified))
-    → ReadFile(&quot;/tmp/.tmp3AVPYA/in.txt&quot;, Modified)
+   ✗ ReadFile(&quot;/tmp/.tmpDPrQCb/in.txt&quot;, Modified) (old: Equals(Ok(String(&quot;Hello, World!&quot;))) ≠ new: Equals(Ok(String(&quot;HeLLo, WorLd!&quot;))))
+   ▶ ToLower(ReadFile(&quot;/tmp/.tmpDPrQCb/in.txt&quot;, Modified))
+    → ReadFile(&quot;/tmp/.tmpDPrQCb/in.txt&quot;, Modified)
     ← Ok(String(&quot;HeLLo, WorLd!&quot;))
    ◀ Ok(String(&quot;hello, world!&quot;))
   ← Ok(String(&quot;hello, world!&quot;))
@@ -6455,14 +6455,14 @@ Even if we are only <em>consistency checking</em> a task to see if it should be 
 We only manifested the bug in the last test due to having a chain of 2 task dependencies, and by carefully controlling what is being executed and what is being checked.</p>
 <p>Recall the second build in the <code>test_no_superfluous_task_dependencies</code> test.
 The build log for that build looks like:</p>
-<pre><code>→ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmp3AVPYA/in.txt&quot;, Modified)))
- ▶ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmp3AVPYA/in.txt&quot;, Modified)))
-  → ToLower(ReadFile(&quot;/tmp/.tmp3AVPYA/in.txt&quot;, Modified))
-   ? ReadFile(&quot;/tmp/.tmp3AVPYA/in.txt&quot;, Modified)
-    → ReadFile(&quot;/tmp/.tmp3AVPYA/in.txt&quot;, Modified)
-     ✓ /tmp/.tmp3AVPYA/in.txt
+<pre><code>→ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmpDPrQCb/in.txt&quot;, Modified)))
+ ▶ ToUpper(ToLower(ReadFile(&quot;/tmp/.tmpDPrQCb/in.txt&quot;, Modified)))
+  → ToLower(ReadFile(&quot;/tmp/.tmpDPrQCb/in.txt&quot;, Modified))
+   ? ReadFile(&quot;/tmp/.tmpDPrQCb/in.txt&quot;, Modified)
+    → ReadFile(&quot;/tmp/.tmpDPrQCb/in.txt&quot;, Modified)
+     ✓ /tmp/.tmpDPrQCb/in.txt
     ← Ok(String(&quot;Hello, World!&quot;))
-   ✓ ReadFile(&quot;/tmp/.tmp3AVPYA/in.txt&quot;, Modified)
+   ✓ ReadFile(&quot;/tmp/.tmpDPrQCb/in.txt&quot;, Modified)
   ← Ok(String(&quot;hello, world!&quot;))
  ◀ Ok(String(&quot;HELLO, WORLD!&quot;))
 ← Ok(String(&quot;HELLO, WORLD!&quot;))
@@ -6741,24 +6741,24 @@ However, <code>test_require_task</code> now fails 😅.</p>
 This is because our changes have correctly removed several superfluous task requires, which influences these assertions.</p>
 <p>Inspect the build log for this test with <code>cargo test --test top_down test_require_task</code>.
 The second build now looks like:</p>
-<pre><code>→ ToLower(ReadFile(&quot;/tmp/.tmpPAuTPp/in.txt&quot;, Modified))
- ? ReadFile(&quot;/tmp/.tmpPAuTPp/in.txt&quot;, Modified)
-  ✓ /tmp/.tmpPAuTPp/in.txt
- ✓ ReadFile(&quot;/tmp/.tmpPAuTPp/in.txt&quot;, Modified)
+<pre><code>→ ToLower(ReadFile(&quot;/tmp/.tmpRQ5iGP/in.txt&quot;, Modified))
+ ? ReadFile(&quot;/tmp/.tmpRQ5iGP/in.txt&quot;, Modified)
+  ✓ /tmp/.tmpRQ5iGP/in.txt
+ ✓ ReadFile(&quot;/tmp/.tmpRQ5iGP/in.txt&quot;, Modified)
 ← Ok(String(&quot;hello world!&quot;))
 </code></pre>
 <p>In this second build, <code>ReadFile</code> is now no longer required, and instead is only checked.
 This is correct, and does not make any assertions fail.</p>
 <p>The third build now looks like:</p>
-<pre><code>→ ToLower(ReadFile(&quot;/tmp/.tmpPAuTPp/in.txt&quot;, Modified))
- ? ReadFile(&quot;/tmp/.tmpPAuTPp/in.txt&quot;, Modified)
-  ✗ /tmp/.tmpPAuTPp/in.txt (old: Modified(Some(SystemTime { tv_sec: 1702653774, tv_nsec: 829976115 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1702653774, tv_nsec: 833976136 })))
-  ▶ ReadFile(&quot;/tmp/.tmpPAuTPp/in.txt&quot;, Modified)
-   - /tmp/.tmpPAuTPp/in.txt
+<pre><code>→ ToLower(ReadFile(&quot;/tmp/.tmpRQ5iGP/in.txt&quot;, Modified))
+ ? ReadFile(&quot;/tmp/.tmpRQ5iGP/in.txt&quot;, Modified)
+  ✗ /tmp/.tmpRQ5iGP/in.txt (old: Modified(Some(SystemTime { tv_sec: 1702654636, tv_nsec: 932968247 })) ≠ new: Modified(Some(SystemTime { tv_sec: 1702654636, tv_nsec: 936968223 })))
+  ▶ ReadFile(&quot;/tmp/.tmpRQ5iGP/in.txt&quot;, Modified)
+   - /tmp/.tmpRQ5iGP/in.txt
   ◀ Ok(String(&quot;!DLROW OLLEH&quot;))
- ✗ ReadFile(&quot;/tmp/.tmpPAuTPp/in.txt&quot;, Modified) (old: Equals(Ok(String(&quot;HELLO WORLD!&quot;))) ≠ new: Equals(Ok(String(&quot;!DLROW OLLEH&quot;))))
- ▶ ToLower(ReadFile(&quot;/tmp/.tmpPAuTPp/in.txt&quot;, Modified))
-  → ReadFile(&quot;/tmp/.tmpPAuTPp/in.txt&quot;, Modified)
+ ✗ ReadFile(&quot;/tmp/.tmpRQ5iGP/in.txt&quot;, Modified) (old: Equals(Ok(String(&quot;HELLO WORLD!&quot;))) ≠ new: Equals(Ok(String(&quot;!DLROW OLLEH&quot;))))
+ ▶ ToLower(ReadFile(&quot;/tmp/.tmpRQ5iGP/in.txt&quot;, Modified))
+  → ReadFile(&quot;/tmp/.tmpRQ5iGP/in.txt&quot;, Modified)
   ← Ok(String(&quot;!DLROW OLLEH&quot;))
  ◀ Ok(String(&quot;!dlrow olleh&quot;))
 ← Ok(String(&quot;!dlrow olleh&quot;))

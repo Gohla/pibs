@@ -195,7 +195,7 @@ A non-incremental context can naively execute tasks without checking.</p>
 <p><a class="admonition-anchor-link" href="#admonition-context"></a></p>
 </div>
 <div>
-<p>In this tutorial, we will be using the words <em>context</em>, <em>build context</em>, and <em>build system</em> interchangeably, typically using just <em>context</em> as it is concise.</p>
+<p>In this tutorial, we will be using the words <em>context</em>, <em>build context</em>, <em>incremental build context</em>, and <em>build system</em> interchangeably, typically using just <em>context</em> as it is concise.</p>
 </div>
 </div>
 <p>Let’s make tasks and contexts more concrete by defining them in code.</p>
@@ -226,8 +226,8 @@ pub trait Context&lt;T: Task&gt; {
 <p><a class="admonition-anchor-link" href="#admonition-tip"></a></p>
 </div>
 <div>
-<p>If this seems overwhelming to you, don’t worry. We will go through the API and explain things. But more importantly, the API should become more clear once we implement it in the next section and subsequent chapters.
-Furthermore, if you’re new to Rust and/or need help understanding certain concepts, I will try to explain them in Rust Help blocks. They are collapsed by default to reduce distraction, clicking the header opens them. See the first Rust Help block at the end of this section.</p>
+<p>If this seems overwhelming to you, don’t worry. We will go through the API and explain things. But more importantly, the API should become more clear once we implement it in the next section and subsequent chapters.</p>
+<p>Furthermore, if you’re new to Rust and/or need help understanding certain concepts, I will try to explain them in Rust Help blocks. They are collapsed by default to reduce distraction, clicking the header opens them. See the first Rust Help block at the end of this section.</p>
 </div>
 </div>
 <p>The <code>Task</code> trait has several supertraits that we will need later in the tutorial to implement incrementality:</p>
@@ -246,10 +246,10 @@ It has a single method <code>require_task</code> for creating a dependency to a 
 It takes a mutable reference to itself, enabling dynamic dependency tracking and caching, which require mutation.
 Because of this, the context reference passed to <code>Task::execute</code> is also mutable.</p>
 <p>This <code>Task</code> and <code>Context</code> API mirrors the mutually recursive definition of task and context we discussed earlier, and forms the basis for the entire build system.</p>
-<div id="admonition-note" class="admonition admonish-note">
+<div id="admonition-file-dependencies-next-chapter" class="admonition admonish-tip">
 <div class="admonition-title">
-<p>Note</p>
-<p><a class="admonition-anchor-link" href="#admonition-note"></a></p>
+<p>File Dependencies: Next Chapter</p>
+<p><a class="admonition-anchor-link" href="#admonition-file-dependencies-next-chapter"></a></p>
 </div>
 <div>
 <p>We will implement file dependencies in the next chapter, as file dependencies only become important with incrementality.</p>
