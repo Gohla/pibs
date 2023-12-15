@@ -2,8 +2,8 @@ pibs
 ├── pie
 │   ├── Cargo.toml
 │   └── src
-│       ├── lib.rs
-│       └── context
-│           ├── mod.rs
-│           └── non_incremental.rs
+│       ├── context
+│       │   ├── non_incremental.rs
+│       │   └── mod.rs
+│       └── lib.rs
 └── Cargo.toml
