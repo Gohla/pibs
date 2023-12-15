@@ -34,7 +34,7 @@ A programmatic incremental build system is a mix between an incremental build sy
 [//]: # ()
 [//]: # (#### Teaser Toy Example)
 
-To show the benefits of a build system with these key properties, here is a simplified version of the programmatic incremental build script for compiling a formal grammar and parsing text with that compiled grammar, which is the build script you will implement in the [final project chapter](../4_example/index.md).
+To show the benefits of a build system with these key properties, below is a simplified version of the build script for compiling a formal grammar and parsing text with that compiled grammar, which is the build script you will implement in the [final project chapter](../4_example/index.md).
 This simplified version removes details that are not important for understanding programmatic incremental build systems at this moment.
 
 ```admonish info
@@ -105,19 +105,19 @@ When we `execute` a `ParseTasks::CompileGrammar` task, it reads the text of the 
 
 ##### Incremental File Dependencies
 
-However, we want this task to be incremental, such that this task is only re-executed when the `grammar_file_path` file changes.
+However, we want this task to be incremental, such that this task is only re-executed when the contents of the `grammar_file_path` file changes.
 Therefore, `execute` has a `context` parameter which is an _incremental build context_ that tasks use to tell the build system about dependencies.
-For example, `ParseTasks::CompileGrammar` tells the build system that it _requires_ the file with `context.require_file(grammar_file_path)`, marking the file as a _read dependency_.
-It is then the responsibility of the incremental build system to only execute this task if the file has changed.
+For example, `ParseTasks::CompileGrammar` tells the build system that it _requires_ the `grammar_file_path` file with `context.require_file(grammar_file_path)`, creating a _read file dependency_ to that file.
+It is then the responsibility of the incremental build system to only execute this task if the file contents have changed.
 
 ##### Dynamic Dependencies
 
 Note that this file dependency is created _while the task is executing_.
-We call these _dynamic dependencies_, as opposed to static dependencies that are hardcoded into the build script.
+We call these _dynamic dependencies_, as opposed to static dependencies.
 Dynamic dependencies enable the _programmatic_ part of programmatic incremental build systems, because dependencies are made while your program is running, and can thus depend on values computed earlier in your program.
 
 Another benefit of dynamic dependencies is that they enable _exact_ dependencies: the dependencies of a task exactly describe when the task should be re-executed, increasing incrementality.
-With static dependencies, you often have to over-approximate dependencies, leading to reduced incrementality.
+With static dependencies that are hardcoded into the build script, you often have to over-approximate dependencies, leading to reduced incrementality.
 
 ##### Incremental Task Dependencies
 

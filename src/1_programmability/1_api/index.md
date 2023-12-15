@@ -19,7 +19,7 @@ A non-incremental context can naively execute tasks without checking.
 Because tasks require other tasks through the context, and the context selectively executes tasks, the definition of task and context is mutually recursive.
 
 ```admonish abstract title="Context"
-In this tutorial, we will be using the words *context*, *build context*, and *build system* interchangeably, typically using just *context* as it is concise.
+In this tutorial, we will be using the words *context*, *build context*, *incremental build context*, and *build system* interchangeably, typically using just *context* as it is concise.
 ```
 
 Let's make tasks and contexts more concrete by defining them in code.
@@ -36,6 +36,7 @@ Add the following code to your `pie/src/lib.rs` file:
 
 ```admonish tip
 If this seems overwhelming to you, don't worry. We will go through the API and explain things. But more importantly, the API should become more clear once we implement it in the next section and subsequent chapters.
+
 Furthermore, if you're new to Rust and/or need help understanding certain concepts, I will try to explain them in Rust Help blocks. They are collapsed by default to reduce distraction, clicking the header opens them. See the first Rust Help block at the end of this section.
 ```
 
@@ -58,7 +59,7 @@ Because of this, the context reference passed to `Task::execute` is also mutable
 
 This `Task` and `Context` API mirrors the mutually recursive definition of task and context we discussed earlier, and forms the basis for the entire build system.
 
-```admonish note
+```admonish important title="File Dependencies: Next Chapter"
 We will implement file dependencies in the next chapter, as file dependencies only become important with incrementality.
 ```
 
