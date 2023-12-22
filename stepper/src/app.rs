@@ -406,62 +406,70 @@ pub fn step_all(
   });
 
   stepper.with_path("4_example", |stepper| {
-    stepper.set_cargo_args(["run", "--example", "parser_dev"]);
-    stepper.apply([
-      create_diff_from_destination_file("a_1_Cargo.toml", "pie/Cargo.toml"),
-      add("a_2_main.rs", "pie/examples/parser_dev/main.rs"),
-    ]);
+    stepper.with_path("1_grammar", |stepper| {
+      stepper.set_cargo_args(["run", "--example", "parser_dev"]);
+      stepper.apply([
+        create_diff_from_destination_file("a_1_Cargo.toml", "pie/Cargo.toml"),
+        add("a_2_main.rs", "pie/examples/parser_dev/main.rs"),
+      ]);
 
-    stepper.set_cargo_args(["test", "--example", "parser_dev", "--", "--show-output"]);
-    stepper.apply([
-      create_diff_from_destination_file("a_3_main_parse_mod.rs", "pie/examples/parser_dev/main.rs"),
-      add("a_4_grammar.rs", "pie/examples/parser_dev/parse.rs"),
-      create_diff_from_destination_file("a_5_parse.rs", "pie/examples/parser_dev/parse.rs"),
-      add("a_6_test.rs", "pie/examples/parser_dev/parse.rs"),
-    ]);
+      stepper.set_cargo_args(["test", "--example", "parser_dev", "--", "--show-output"]);
+      stepper.apply([
+        create_diff_from_destination_file("a_3_main_parse_mod.rs", "pie/examples/parser_dev/main.rs"),
+        add("a_4_grammar.rs", "pie/examples/parser_dev/parse.rs"),
+        create_diff_from_destination_file("a_5_parse.rs", "pie/examples/parser_dev/parse.rs"),
+        add("a_6_test.rs", "pie/examples/parser_dev/parse.rs"),
+      ]);
+    });
 
-    stepper.set_cargo_args(["build", "--example", "parser_dev"]);
-    stepper.apply([
-      create_diff_from_destination_file("b_1_main_task_mod.rs", "pie/examples/parser_dev/main.rs"),
-      add("b_2_tasks_outputs.rs", "pie/examples/parser_dev/task.rs"),
-      add("b_3_require_file.rs", "pie/examples/parser_dev/task.rs"),
-      add("b_4_task.rs", "pie/examples/parser_dev/task.rs"),
-    ]);
+    stepper.with_path("2_task", |stepper| {
+      stepper.set_cargo_args(["build", "--example", "parser_dev"]);
+      stepper.apply([
+        create_diff_from_destination_file("b_1_main_task_mod.rs", "pie/examples/parser_dev/main.rs"),
+        add("b_2_tasks_outputs.rs", "pie/examples/parser_dev/task.rs"),
+        add("b_3_require_file.rs", "pie/examples/parser_dev/task.rs"),
+        add("b_4_task.rs", "pie/examples/parser_dev/task.rs"),
+      ]);
+    });
 
-    stepper.set_cargo_args(["run", "--example", "parser_dev", "--", "--help"]);
-    stepper.apply([
-      create_diff_from_destination_file("c_1_Cargo.toml", "pie/Cargo.toml"),
-      create_diff_from_destination_file("c_2_cli.rs", "pie/examples/parser_dev/main.rs"),
-    ]);
-    stepper.set_cargo_args(["run", "--example", "parser_dev", "--", "grammar.pest", "number", "test_1.txt", "test_2.txt"]);
-    stepper.apply([
-      create_diff_from_destination_file("c_3_compile_parse.rs", "pie/examples/parser_dev/main.rs"),
-      add("c_4_grammar.pest", "grammar.pest"),
-      add("c_4_test_1.txt", "test_1.txt"),
-      add("c_4_test_2.txt", "test_2.txt"),
-    ]);
+    stepper.with_path("3_cli", |stepper| {
+      stepper.set_cargo_args(["run", "--example", "parser_dev", "--", "--help"]);
+      stepper.apply([
+        create_diff_from_destination_file("c_1_Cargo.toml", "pie/Cargo.toml"),
+        create_diff_from_destination_file("c_2_cli.rs", "pie/examples/parser_dev/main.rs"),
+      ]);
+      stepper.set_cargo_args(["run", "--example", "parser_dev", "--", "grammar.pest", "number", "test_1.txt", "test_2.txt"]);
+      stepper.apply([
+        create_diff_from_destination_file("c_3_compile_parse.rs", "pie/examples/parser_dev/main.rs"),
+        add("c_4_grammar.pest", "grammar.pest"),
+        add("c_4_test_1.txt", "test_1.txt"),
+        add("c_4_test_2.txt", "test_2.txt"),
+      ]);
+    });
 
-    stepper.apply([
-      create_diff_from_destination_file("d_1_Cargo.toml", "pie/Cargo.toml"),
-      create_diff_from_destination_file("d_2_main_editor_mod.rs", "pie/examples/parser_dev/main.rs"),
-      add("d_3_editor.rs", "pie/examples/parser_dev/editor.rs"),
-      create_diff_from_destination_file("d_4_main_cli.rs", "pie/examples/parser_dev/main.rs"),
-    ]);
+    stepper.with_path("4_interactive", |stepper| {
+      stepper.apply([
+        create_diff_from_destination_file("d_1_Cargo.toml", "pie/Cargo.toml"),
+        create_diff_from_destination_file("d_2_main_editor_mod.rs", "pie/examples/parser_dev/main.rs"),
+        add("d_3_editor.rs", "pie/examples/parser_dev/editor.rs"),
+        create_diff_from_destination_file("d_4_main_cli.rs", "pie/examples/parser_dev/main.rs"),
+      ]);
 
-    stepper.apply([
-      create_diff_from_destination_file("e_1_editor_buffer_mod.rs", "pie/examples/parser_dev/editor.rs"),
-      add("e_2_buffer.rs", "pie/examples/parser_dev/editor/buffer.rs"),
-      create_diff_from_destination_file("e_3_editor_buffers.rs", "pie/examples/parser_dev/editor.rs"),
-    ]);
+      stepper.apply([
+        create_diff_from_destination_file("e_1_editor_buffer_mod.rs", "pie/examples/parser_dev/editor.rs"),
+        add("e_2_buffer.rs", "pie/examples/parser_dev/editor/buffer.rs"),
+        create_diff_from_destination_file("e_3_editor_buffers.rs", "pie/examples/parser_dev/editor.rs"),
+      ]);
 
-    stepper.apply([
-      create_diff_from_destination_file("f_editor_update.rs", "pie/examples/parser_dev/editor.rs"),
-    ]);
+      stepper.apply([
+        create_diff_from_destination_file("f_editor_update.rs", "pie/examples/parser_dev/editor.rs"),
+      ]);
 
-    stepper.apply([
-      create_diff_from_destination_file("g_editor_build_log.rs", "pie/examples/parser_dev/editor.rs"),
-    ]).output(
-      SourceArchive::new("source.zip")
-    );
+      stepper.apply([
+        create_diff_from_destination_file("g_editor_build_log.rs", "pie/examples/parser_dev/editor.rs"),
+      ]).output(
+        SourceArchive::new("source.zip")
+      );
+    });
   });
 }

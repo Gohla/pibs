@@ -19,6 +19,10 @@
   - [Prevent Hidden Dependencies](./3_min_sound/6_hidden_dep/index.md)
   - [Prevent Cycles](./3_min_sound/7_cycle/index.md)
 - [Project: Interactive Parser Development](./4_example/index.md)
+  - [Compiling Grammars and Parsing](./4_example/1_grammar/index.md)
+  - [Task Implementation](./4_example/2_task/index.md)
+  - [CLI for Incremental Batch Builds](./4_example/3_cli/index.md)
+  - [Interactive Parser Development](./4_example/4_interactive/index.md)
 
 # Appendix
 
