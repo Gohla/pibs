@@ -4,6 +4,6 @@
  pest_meta = "2"
  pest_vm = "2"
  clap = { version = "4", features = ["derive"] }
-+ratatui = "0.24"
++ratatui = "0.25"
 +tui-textarea = "0.4"
 +crossterm = "0.27"

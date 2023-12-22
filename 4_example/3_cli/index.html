@@ -1,0 +1,441 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>CLI for Incremental Batch Builds - Build your own Programmatic Incremental Build System</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../../favicon.svg">
+        <link rel="shortcut icon" href="../../favicon.png">
+        <link rel="stylesheet" href="../../css/variables.css">
+        <link rel="stylesheet" href="../../css/general.css">
+        <link rel="stylesheet" href="../../css/chrome.css">
+        <link rel="stylesheet" href="../../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../../highlight.css">
+        <link rel="stylesheet" href="../../tomorrow-night.css">
+        <link rel="stylesheet" href="../../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../.././diff2html.min.css">
+        <link rel="stylesheet" href="../.././mdbook-admonish.css">
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "ayu" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../../0_intro/index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../0_intro/1_setup/index.html"><strong aria-hidden="true">1.1.</strong> Setup</a></li></ol></li><li class="chapter-item expanded "><a href="../../1_programmability/index.html"><strong aria-hidden="true">2.</strong> Programmability</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../1_programmability/1_api/index.html"><strong aria-hidden="true">2.1.</strong> Programmable Build System API</a></li><li class="chapter-item expanded "><a href="../../1_programmability/2_non_incremental/index.html"><strong aria-hidden="true">2.2.</strong> Non-Incremental Context</a></li></ol></li><li class="chapter-item expanded "><a href="../../2_incrementality/index.html"><strong aria-hidden="true">3.</strong> Incrementality</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../2_incrementality/1_require_file/index.html"><strong aria-hidden="true">3.1.</strong> Requiring Files</a></li><li class="chapter-item expanded "><a href="../../2_incrementality/2_stamp/index.html"><strong aria-hidden="true">3.2.</strong> Stamps</a></li><li class="chapter-item expanded "><a href="../../2_incrementality/3_dependency/index.html"><strong aria-hidden="true">3.3.</strong> Dynamic Dependencies</a></li><li class="chapter-item expanded "><a href="../../2_incrementality/4_store/index.html"><strong aria-hidden="true">3.4.</strong> Dependency Graph Store</a></li><li class="chapter-item expanded "><a href="../../2_incrementality/5_context/index.html"><strong aria-hidden="true">3.5.</strong> Incremental Top-Down Context</a></li><li class="chapter-item expanded "><a href="../../2_incrementality/6_example/index.html"><strong aria-hidden="true">3.6.</strong> Incrementality Example</a></li></ol></li><li class="chapter-item expanded "><a href="../../3_min_sound/index.html"><strong aria-hidden="true">4.</strong> Testing Incrementality & Correctness</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../3_min_sound/1_session/index.html"><strong aria-hidden="true">4.1.</strong> Incrementality with Sessions</a></li><li class="chapter-item expanded "><a href="../../3_min_sound/2_tracker/index.html"><strong aria-hidden="true">4.2.</strong> Tracking Build Events</a></li><li class="chapter-item expanded "><a href="../../3_min_sound/3_test/index.html"><strong aria-hidden="true">4.3.</strong> Integration Testing</a></li><li class="chapter-item expanded "><a href="../../3_min_sound/4_fix_task_dep/index.html"><strong aria-hidden="true">4.4.</strong> Fix Superfluous Task Dependency</a></li><li class="chapter-item expanded "><a href="../../3_min_sound/5_overlap/index.html"><strong aria-hidden="true">4.5.</strong> Prevent Overlapping File Writes</a></li><li class="chapter-item expanded "><a href="../../3_min_sound/6_hidden_dep/index.html"><strong aria-hidden="true">4.6.</strong> Prevent Hidden Dependencies</a></li><li class="chapter-item expanded "><a href="../../3_min_sound/7_cycle/index.html"><strong aria-hidden="true">4.7.</strong> Prevent Cycles</a></li></ol></li><li class="chapter-item expanded "><a href="../../4_example/index.html"><strong aria-hidden="true">5.</strong> Project: Interactive Parser Development</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../../4_example/1_grammar/index.html"><strong aria-hidden="true">5.1.</strong> Compiling Grammars and Parsing</a></li><li class="chapter-item expanded "><a href="../../4_example/2_task/index.html"><strong aria-hidden="true">5.2.</strong> Task Implementation</a></li><li class="chapter-item expanded "><a href="../../4_example/3_cli/index.html" class="active"><strong aria-hidden="true">5.3.</strong> CLI for Incremental Batch Builds</a></li><li class="chapter-item expanded "><a href="../../4_example/4_interactive/index.html"><strong aria-hidden="true">5.4.</strong> Interactive Parser Development</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Appendix</li><li class="chapter-item expanded "><a href="../../a_appendix/1_pie.html"><strong aria-hidden="true">6.</strong> PIE Implementations & Publications</a></li><li class="chapter-item expanded "><a href="../../a_appendix/2_related_work.html"><strong aria-hidden="true">7.</strong> Related Work</a></li><li class="chapter-item expanded "><a href="../../a_appendix/3_future_work.html"><strong aria-hidden="true">8.</strong> Future Work</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+<!-- CHANGE: removed all but light and ayu theme, and renamed ayu to dark -->                          
+<!--                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>-->
+<!--                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>-->
+<!--                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>-->
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Dark</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Build your own Programmatic Incremental Build System</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/Gohla/pie/" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/Gohla/pie/edit/master/tutorial/src/4_example/3_cli/index.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="cli-for-incremental-batch-builds"><a class="header" href="#cli-for-incremental-batch-builds">CLI for Incremental Batch Builds</a></h1>
+<p>We have tasks for compiling grammars and parsing files, but we need to pass file paths and a rule name into these tasks.
+We will pass this data to the program via command-line arguments.
+To parse command-line arguments, we will use <a href="https://docs.rs/clap/latest/clap/" title="" target="_blank">clap</a>, which is an awesome library for easily parsing command-line arguments.
+Add clap as a dependency to <code>pie/Cargo.toml</code>:</p>
+<div class="diff2html" id="diff2html_0"></div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    let diff = String.raw`--- pie/Cargo.toml
++++ pie/Cargo.toml
+@@ -12,3 +12,4 @@
+ pest = "2"
+ pest_meta = "2"
+ pest_vm = "2"
++clap = { version = "4", features = ["derive"] }
+`;
+    let target = document.getElementById('diff2html_0');
+    let configuration = {
+      drawFileList: false,
+      fileListToggle: false,
+      fileContentToggle: false,
+
+      outputFormat: 'line-by-line',
+      matching: 'lines',
+    };
+    let diff2htmlUi = new Diff2HtmlUI(target, diff, configuration, hljs);
+    diff2htmlUi.draw();
+  });
+</script>
+<p>We’re using the <code>derive</code> feature of clap to automatically derive a full-featured argument parser from a struct.
+Modify <code>pie/examples/parser_dev/main.rs</code>:</p>
+<div class="diff2html" id="diff2html_1"></div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    let diff = String.raw`--- pie/examples/parser_dev/main.rs
++++ pie/examples/parser_dev/main.rs
+@@ -1,6 +1,20 @@
++use std::path::PathBuf;
++
++use clap::Parser;
++
+ pub mod parse;
+ pub mod task;
+ 
++#[derive(Parser)]
++pub struct Args {
++  /// Path to the pest grammar file.
++  grammar_file_path: PathBuf,
++  /// Rule name (from the pest grammar file) used to parse program files.
++  rule_name: String,
++  /// Paths to program files to parse with the pest grammar.
++  program_file_paths: Vec<PathBuf>,
++}
++
+ fn main() {
+-
++  let args = Args::parse();
+ }
+`;
+    let target = document.getElementById('diff2html_1');
+    let configuration = {
+      drawFileList: false,
+      fileListToggle: false,
+      fileContentToggle: false,
+
+      outputFormat: 'side-by-side',
+      matching: 'lines',
+    };
+    let diff2htmlUi = new Diff2HtmlUI(target, diff, configuration, hljs);
+    diff2htmlUi.draw();
+  });
+</script>
+<p>The <code>Args</code> struct contains exactly the data we need: the path to the grammar file, the name of the rule to start parsing with, and paths to program files to parse.
+We derive an argument parser for <code>Args</code> with <code>#[derive(Parser)]</code>.
+Then we parse command-line arguments in <code>main</code> with <code>Args::parse()</code>.</p>
+<p>Test this program with <code>cargo run --example parser_dev -- --help</code>, which should result in usage help for the program.
+Note that the names, ordering, and doc-comments of the fields are used to generate this help.
+You can test out several more commands:</p>
+<ul>
+<li><code>cargo run --example parser_dev --</code></li>
+<li><code>cargo run --example parser_dev -- foo</code></li>
+<li><code>cargo run --example parser_dev -- foo bar</code></li>
+<li><code>cargo run --example parser_dev -- foo bar baz qux</code></li>
+</ul>
+<p>Now let’s use these arguments to actually compile the grammar and parse example program files.
+Modify <code>pie/examples/parser_dev/main.rs</code>:</p>
+<div class="diff2html" id="diff2html_2"></div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    let diff = String.raw`--- pie/examples/parser_dev/main.rs
++++ pie/examples/parser_dev/main.rs
+@@ -1,7 +1,13 @@
++use std::fmt::Write;
+ use std::path::PathBuf;
+ 
+ use clap::Parser;
+ 
++use pie::Pie;
++use pie::tracker::writing::WritingTracker;
++
++use crate::task::{Outputs, Tasks};
++
+ pub mod parse;
+ pub mod task;
+ 
+@@ -17,4 +23,30 @@
+ 
+ fn main() {
+   let args = Args::parse();
++  compile_grammar_and_parse(args);
++}
++
++fn compile_grammar_and_parse(args: Args) {
++  let mut pie = Pie::with_tracker(WritingTracker::with_stderr());
++
++  let mut session = pie.new_session();
++  let mut errors = String::new();
++
++  let compile_grammar_task = Tasks::compile_grammar(&args.grammar_file_path);
++  if let Err(error) = session.require(&compile_grammar_task) {
++    let _ = writeln!(errors, "{}", error); // Ignore error: writing to String cannot fail.
++  }
++
++  for path in args.program_file_paths {
++    let task = Tasks::parse(&compile_grammar_task, &path, &args.rule_name);
++    match session.require(&task) {
++      Err(error) => { let _ = writeln!(errors, "{}", error); }
++      Ok(Outputs::Parsed(Some(output))) => println!("Parsing '{}' succeeded: {}", path.display(), output),
++      _ => {}
++    }
++  }
++
++  if !errors.is_empty() {
++    println!("Errors:\n{}", errors);
++  }
+ }
+`;
+    let target = document.getElementById('diff2html_2');
+    let configuration = {
+      drawFileList: false,
+      fileListToggle: false,
+      fileContentToggle: false,
+
+      outputFormat: 'side-by-side',
+      matching: 'lines',
+    };
+    let diff2htmlUi = new Diff2HtmlUI(target, diff, configuration, hljs);
+    diff2htmlUi.draw();
+  });
+</script>
+<p>In <code>compile_grammar_and_parse</code>, we create a new <code>Pie</code> instance that writes the build log to stderr, and create a new build session.
+Then, we require a compile grammar task using the <code>grammar_file_path</code> from <code>Args</code>, and write any errors to the <code>errors</code> <code>String</code>.
+We then require a parse task for every path in <code>args.program_file_paths</code>, using the previously created <code>compile_grammar_task</code> and <code>args.rule_name</code>.
+Successes are printed to stdout and errors are written to <code>errors</code>.
+Finally, we print <code>errors</code> to stdout if there are any.</p>
+<p>To test this out, we need a grammar and some test files. Create <code>grammar.pest</code>:</p>
+<pre><code>num = @{ ASCII_DIGIT+ }
+
+main = { SOI ~ num ~ EOI }
+
+WHITESPACE = _{ &quot; &quot; | &quot;\t&quot; | &quot;\n&quot; | &quot;\r&quot; }
+</code></pre>
+<div id="admonition-pest-grammars" class="admonition admonish-info">
+<div class="admonition-title">
+<p>Pest Grammars</p>
+<p><a class="admonition-anchor-link" href="#admonition-pest-grammars"></a></p>
+</div>
+<div>
+<p>You don’t need to fully understand pest grammars to finish this example.
+However, I will explain the basics of this grammar here.
+Feel free to learn and experiment more if you are interested.</p>
+<p>Grammars are <a href="https://pest.rs/book/grammars/syntax.html#syntax-of-pest-grammars" title="" target="_blank">lists of rules</a>, such as <code>num</code> and <code>main</code>.
+This grammar parses numbers with the <code>num</code> rule, matching 1 or more <code>ASCII_DIGIT</code> with <a href="https://pest.rs/book/grammars/syntax.html#repetition" title="" target="_blank">repetition</a>.</p>
+<p>The <code>main</code> rule ensures that there is no additional text before and after a <code>num</code> rule, using <a href="https://pest.rs/book/grammars/syntax.html#start-and-end-of-input" title="" target="_blank">
+<code>SOI</code> (start of input) <code>EOI</code> (end of input)</a>, and using the <a href="https://pest.rs/book/grammars/syntax.html#sequence" title="" target="_blank">
+<code>~</code> operator to sequence</a> these rules.</p>
+<p>We set the <a href="https://pest.rs/book/grammars/syntax.html#implicit-whitespace" title="" target="_blank">
+<code>WHITESPACE</code> builtin rule</a> to <code>{ &quot; &quot; | &quot;\t&quot; | &quot;\n&quot; | &quot;\r&quot; }</code> so that spaces, tabs, newlines, and carriage return characters are implicitly allowed between sequenced rules.
+The <code>@</code> operator before <code>{</code> indicates that it is an <a href="https://pest.rs/book/grammars/syntax.html#atomic" title="" target="_blank">atomic rule</a>, disallowing implicit whitespace.
+We want this on the <code>num</code> rule so that we can’t add spaces in between digits of a number (try removing it and see!)</p>
+<p>The <code>_</code> operator before <code>{</code> indicates that it is a <a href="https://pest.rs/book/grammars/syntax.html#silent" title="" target="_blank">silent rule</a> that does not contribute to the parse result.
+This is important when processing the parse result into an <a href="https://pest.rs/book/examples/json.html#ast-generation" title="" target="_blank">Abstract Syntax Tree (AST)</a>.
+In this example we just print the parse result, so silent rules are not really needed, but I included it for completeness.</p>
+</div>
+</div>
+<p>Create <code>test_1.txt</code> with:</p>
+<pre><code>42
+</code></pre>
+<p>And create <code>test_2.txt</code> with:</p>
+<pre><code>foo
+</code></pre>
+<p>Run the program with <code>cargo run --example parser_dev -- grammar.pest main test_1.txt test_2.txt</code>.
+This should result in a build log showing that the grammar is successfully compiled, that one file is successfully parsed, and that one file has a parse error.</p>
+<p>Unfortunately, there is no incrementality between different runs of the example, because the <code>Pie</code> <code>Store</code> is not persisted.
+The <code>Store</code> only exists in-memory while the program is running, and is then thrown away.
+Thus, there cannot be any incrementality.
+To get incrementality, we need to serialize the <code>Store</code> before the program exits, and deserialize it when the program starts.
+This is possible and not actually that hard, I just never got around to explaining it in this tutorial.
+See the <a href="#side-note-serialization">Side Note: Serialization</a> section at the end for info on how this can be implemented.</p>
+<div id="admonition-hiding-the-build-log" class="admonition admonish-tip">
+<div class="admonition-title">
+<p>Hiding the Build Log</p>
+<p><a class="admonition-anchor-link" href="#admonition-hiding-the-build-log"></a></p>
+</div>
+<div>
+<p>If you are using a bash-like shell on a UNIX-like OS, you can hide the build log by redirecting stderr to <code>/dev/null</code> with: <code>cargo run --example parser_dev -- grammar.pest main test_1.txt test_2.txt 2&gt;/dev/null</code>.
+Otherwise, you can hide the build log by replacing <code>WritingTracker::with_stderr()</code> with <code>NoopTracker</code>.</p>
+</div>
+</div>
+<p>Feel free to experiment a bit with the grammar, example files, etc. before continuing.
+We will develop an interactive editor next however, which will make experimentation easier!</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../4_example/2_task/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="../../4_example/4_interactive/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../4_example/2_task/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="../../4_example/4_interactive/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../elasticlunr.min.js"></script>
+        <script src="../../mark.min.js"></script>
+        <script src="../../searcher.js"></script>
+
+        <script src="../../clipboard.min.js"></script>
+        <script src="../../highlight.js"></script>
+        <script src="../../book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../.././diff2html-ui-base.min.js"></script>
+
+
+    </div>
+    </body>
+</html>
