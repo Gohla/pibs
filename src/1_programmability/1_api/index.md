@@ -59,10 +59,6 @@ Because of this, the context reference passed to `Task::execute` is also mutable
 
 This `Task` and `Context` API mirrors the mutually recursive definition of task and context we discussed earlier, and forms the basis for the entire build system.
 
-```admonish important title="File Dependencies: Next Chapter"
-We will implement file dependencies in the next chapter, as file dependencies only become important with incrementality.
-```
-
 Build the project by running `cargo build`.
 The output should look something like:
 
@@ -70,7 +66,7 @@ The output should look something like:
 {{#include ../../gen/1_programmability/1_api/a_cargo.txt}}
 ```
 
-In the next section, we will implement a non-incremental `Context` and test it against `Task` implementations.
+In the next section, we will implement a _non-incremental_ `Context` and test it against `Task` implementations.
 
 ```admonish tip title="Rust Help: Modules, Imports, Ownership, Traits, Methods, Supertraits, Associated Types, Visibility" collapsible=true
 [The Rust Programming Language](https://doc.rust-lang.org/book/ch00-00-introduction.html) is an introductory book about Rust. I will try to provide links to the book where possible.

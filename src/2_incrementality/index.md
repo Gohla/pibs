@@ -1,4 +1,4 @@
-# Introduction
+# Incrementality
 
 In this chapter, we will implement an *incremental* build context.
 An incremental context selectively executes tasks — only those that are affected by a change.

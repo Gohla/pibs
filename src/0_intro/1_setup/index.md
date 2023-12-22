@@ -33,7 +33,7 @@ In this tutorial, we will create a subset of the [PIE in Rust](https://github.co
 However, later on in the tutorial we will also create an additional package (for unit testing utilities), so we need to set up a Rust _workspace_ that supports multiple packages.
 
 Therefore, first create a `pibs` directory, which will serve as the workspace directory of the project.
-This does not have to be called `pibs`, you can use a different name.
+This does not have to be called `pibs`, you can use a different name, but this tutorial will use `pibs`.
 Then create the `pibs/Cargo.toml` file with the following contents:
 
 ```toml,
@@ -96,7 +96,7 @@ We use [Rust edition 2021](https://doc.rust-lang.org/edition-guide/rust-2021/ind
 I recommend storing your code in a source control system such as [Git](https://git-scm.com/), and uploading it to a source code hub such as [GitHub](https://github.com/).
 A source control system allows you to look at changes and to go back to older versions, and uploading to a source code hub then provides a convenient backup.
 
-If you use Git, create the `pie/.gitignore` file with:
+If you use Git, create the `.gitignore` file with:
 
 ```.gitignore
 /target

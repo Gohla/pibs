@@ -3,6 +3,10 @@
 We set up the `Task` and `Context` API in such a way that we can implement incrementality.
 However, incrementality is *hard*, so let's start with an extremely simple non-incremental `Context` implementation to get a feeling for the API.
 
+```admonish important title="File Dependencies: Next Chapter"
+We will implement file dependencies in the next chapter, as file dependencies only become important with incrementality.
+```
+
 ## Context module
 
 Since we will be implementing three different contexts in this tutorial, we will separate them in different modules.
