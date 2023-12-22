@@ -5,7 +5,7 @@
 In this tutorial, you implemented a large part of the PIE, the programmatic incremental build system that I developed during my PhD and Postdoc.
 There are currently two versions of PIE:
 
-- [PIE in Rust](https://github.com/Gohla/pie), a superset of what you have been developing in this tutorial. I plan to make this a full-fledged and usable library for incremental batch builds and interactive systems. You are of course free to continue developing the library you made in this tutorial, but I would appreciate users and/or contributions to the PIE library!
+- [PIE in Rust](https://github.com/Gohla/pie), a superset of what you have been developing in this tutorial.
   - The largest differences between PIE in this tutorial and the PIE library are:
     - [Support for arbitrary task](https://github.com/Gohla/pie/blob/main/pie/src/lib.rs#L72) and [resource types](https://github.com/Gohla/pie/blob/main/pie/src/lib.rs#L74-L97), achieved by using [trait objects](https://github.com/Gohla/pie/blob/main/pie/src/trait_object/mod.rs) to provide dynamic dispatch. 
     - [Resource abstraction](https://github.com/Gohla/pie/blob/main/pie/src/lib.rs#L117-L130) enables resources other than files. Resources are global mutable state where the state is not handled by the PIE library (as opposed to task inputs and outputs), but _read and write access to_ that state _is_ handled by PIE. [Files (as `PathBuf`)](https://github.com/Gohla/pie/blob/main/pie/src/resource/file.rs) are a resource, but so is a [hashmap](https://github.com/Gohla/pie/blob/main/pie/src/resource/map.rs).
